@@ -1,4 +1,5 @@
 import { FirebaseProvider } from "../firebase/provider";
+import { ThemeProvider } from "../components/theme-provider";
 import "./globals.css";
 
 export const metadata = {
@@ -6,14 +7,20 @@ export const metadata = {
   description: "Control financiero personal",
 };
 
-// Esta función DEBE tener 'export default'
 export default function RootLayout({ children }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body>
-        <FirebaseProvider>
-          {children}
-        </FirebaseProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <FirebaseProvider>
+            {children}
+          </FirebaseProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

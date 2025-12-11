@@ -15,8 +15,11 @@ export function FirebaseProvider({ children }) {
   }, []);
 
   if (!firebase) {
-    // Show a loading indicator or a blank screen
-    return <div className="h-screen flex items-center justify-center bg-[#F2F4F7]"><div className="w-10 h-10 border-4 border-[#007AFF] rounded-full animate-spin border-t-transparent"></div></div>;
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <div className="w-10 h-10 border-4 border-primary rounded-full animate-spin border-t-transparent"></div>
+      </div>
+    );
   }
 
   return (
@@ -35,14 +38,6 @@ export const useFirebase = () => {
     }
     return context;
 };
-
-export const useAuth = () => {
-    const context = useContext(FirebaseContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within a FirebaseProvider');
-    }
-    return { auth: context.auth };
-}
 
 export const useFirestore = () => {
     const context = useContext(FirebaseContext);

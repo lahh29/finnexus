@@ -8,19 +8,23 @@ import {
   signOut,
   updateProfile
 } from 'firebase/auth';
-import { useAuth as useFirebaseAuth } from './provider';
+import { useFirebase } from './provider';
 
 const AuthContext = createContext({});
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const { auth } = useFirebaseAuth();
+  const { auth } = useFirebase();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+        // Firebase might not be initialized yet.
+        // We will be in a loading state anyway.
+        return;
+    };
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -34,8 +38,9 @@ export const AuthProvider = ({ children }) => {
 
   const registerWithEmail = async (email, password, name) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    // Actualizamos el nombre del usuario inmediatamente
     await updateProfile(userCredential.user, { displayName: name });
+    // This is important to reflect the name change immediately in the app state
+    setUser({ ...userCredential.user, displayName: name });
     return userCredential;
   };
 
