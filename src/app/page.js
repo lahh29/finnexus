@@ -203,34 +203,32 @@ const OverviewView = ({ data, actions, fmt }) => (
   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-enter">
     <div className="lg:col-span-8 space-y-8">
       {/* Balance Card Pro */}
-      <div className="rounded-[2.5rem] bg-[#121212] text-white p-8 md:p-10 relative overflow-hidden shadow-2xl group ring-1 ring-white/10">
-        <div className="relative z-10 flex flex-wrap md:flex-nowrap justify-between items-start md:items-end gap-8">
+      <div className="rounded-[2.5rem] bg-[#1D1D1F] text-white p-8 md:p-10 relative overflow-hidden shadow-2xl group ring-1 ring-white/10">
+        <div className="absolute top-[-50%] right-[-30%] w-[800px] h-[800px] bg-blue-600/20 blur-[150px] rounded-full pointer-events-none opacity-60"></div>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-8">
           
-          <div className="flex-1 min-w-0">
-            <div className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Disponible Neto
+          <div className="flex-1">
+            <div className="text-blue-300 font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div> Balance Total
             </div>
-            <h2 className="text-5xl md:text-7xl font-bold tracking-tight mb-5 text-white truncate">{fmt(data.balance - data.totalFixed)}</h2>
-            <div className="inline-flex items-center gap-2 text-gray-300 text-xs font-semibold bg-white/5 px-4 py-2 rounded-full border border-white/5 backdrop-blur-md">
-              <Zap className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-              <span>Descontando {fmt(data.totalFixed)} de fijos</span>
+            <h2 className="text-5xl md:text-6xl font-bold tracking-tighter mb-4 text-white">{fmt(data.balance)}</h2>
+            <div className="inline-flex items-center gap-2 text-gray-300 text-xs font-semibold bg-white/5 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+              <Zap className="w-3.5 h-3.5 text-yellow-400" />
+              <span>{fmt(data.totalFixed)} en gastos fijos</span>
             </div>
           </div>
 
-          <div className="w-full md:w-auto flex-shrink-0 bg-white/5 p-6 rounded-[2rem] backdrop-blur-md border border-white/5 flex items-center justify-between gap-8 hover:bg-white/10 transition-colors">
-             <div>
-                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide mb-1">Ingresos</p>
-                <p className="text-xl font-bold text-[#30D158] flex items-center gap-1"><TrendingUp className="w-5 h-5"/> {fmt(data.income)}</p>
+          <div className="w-full md:w-auto flex-shrink-0 flex md:flex-col gap-4">
+             <div className="flex-1 bg-white/5 p-5 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/10 transition-colors">
+                <p className="text-[10px] text-gray-300 uppercase font-bold tracking-wide mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-green-400"/>Ingresos</p>
+                <p className="text-2xl font-semibold text-white">{fmt(data.income)}</p>
              </div>
-             <div className="w-px h-10 bg-white/10"></div>
-             <div>
-                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide mb-1">Gastos</p>
-                <p className="text-xl font-bold text-[#FF453A] flex items-center gap-1"><TrendingDown className="w-5 h-5"/> {fmt(data.expense)}</p>
+             <div className="flex-1 bg-white/5 p-5 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/10 transition-colors">
+                <p className="text-[10px] text-gray-300 uppercase font-bold tracking-wide mb-1 flex items-center gap-1.5"><TrendingDown className="w-3.5 h-3.5 text-red-400"/>Gastos</p>
+                <p className="text-2xl font-semibold text-white">{fmt(data.expense)}</p>
              </div>
           </div>
         </div>
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-600/20 blur-[130px] rounded-full pointer-events-none"></div>
-        <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] bg-purple-600/10 blur-[100px] rounded-full pointer-events-none"></div>
       </div>
 
       {/* Tarjetas */}
