@@ -1,62 +1,7 @@
-@import "tailwindcss";
-
-:root {
-  --background: #F5F5F7; /* Apple Gray */
-  --foreground: #1D1D1F;
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --sidebar-width: 280px;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Ocultar barra de scroll pero permitir desplazamiento */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-@layer utilities {
-  /* Tarjetas estilo Cristal Apple */
-  .ios-card {
-    @apply bg-white/80 backdrop-blur-xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)];
-    border-radius: 1.5rem;
-  }
-  
-  .ios-card-hover {
-    @apply transition-all duration-300 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1;
-  }
-
-  /* Inputs modernos */
-  .ios-input {
-    @apply w-full bg-[#F5F5F7] border-0 rounded-2xl px-5 py-4 text-[16px] font-medium outline-none transition-all focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:shadow-lg;
-  }
-
-  /* Botones primarios */
-  .ios-button {
-    @apply bg-[#007AFF] text-white font-semibold rounded-2xl px-6 py-4 active:scale-95 hover:bg-[#0071eb] transition-all shadow-lg shadow-blue-500/30;
-  }
-  
-  /* Layout Desktop */
-  .desktop-grid {
-    display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 2rem;
-  }
-}
-
-/* Animaciones de entrada suaves */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-enter {
-  animation: fadeIn 0.4s ease-out forwards;
+export default function HomePage() {
+  return (
+    <main className="flex items-center justify-center min-h-screen">
+      <h1 className="text-2xl font-bold">Mis Finanzas</h1>
+    </main>
+  );
 }
