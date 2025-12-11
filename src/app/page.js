@@ -6,10 +6,28 @@ import { useFinance } from '../hooks/useFinance';
 import { useCards } from '../hooks/useCards';
 import { useSubscriptions } from '../hooks/useSubscriptions';
 import { 
-  LogIn, Plus, TrendingUp, TrendingDown, Trash2, X, CreditCard, 
-  Calendar, Home as HomeIcon, Tv, Zap, LayoutGrid, PieChart, 
-  Wallet, LogOut, ArrowRight 
+  Plus, TrendingUp, TrendingDown, Trash2, X, CreditCard, 
+  Home as HomeIcon, Tv, Zap, LayoutGrid, PieChart, 
+  LogOut, ArrowRight, User, Hexagon 
 } from 'lucide-react';
+
+// --- COMPONENTE LOGO MODERNO ---
+const BrandLogo = ({ className = "w-8 h-8", dark = false }) => (
+  <div className={`flex items-center gap-3 ${className}`}>
+    <div className="relative flex items-center justify-center group">
+      <div className={`absolute inset-0 rounded-xl blur-md opacity-40 transition-colors duration-500 ${dark ? 'bg-white' : 'bg-blue-600'}`}></div>
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative w-10 h-10 transform group-hover:rotate-12 transition-transform duration-500 ease-out z-10">
+        <rect x="8" y="8" width="24" height="24" rx="7" fill={dark ? "#FFF" : "#000"} fillOpacity="0.1"/>
+        <path d="M20 12C15.5817 12 12 15.5817 12 20C12 24.4183 15.5817 28 20 28C24.4183 28 28 24.4183 28 20" stroke={dark ? "#FFF" : "#1D1D1F"} strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M28 20C28 15.5817 24.4183 12 20 12" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round"/>
+        <circle cx="20" cy="20" r="3" fill={dark ? "#FFF" : "#1D1D1F"}/>
+      </svg>
+    </div>
+    <span className={`font-bold text-xl tracking-tight ${dark ? 'text-white' : 'text-[#1D1D1F]'}`}>
+      Fin<span className="text-[#007AFF]">Nexus</span>
+    </span>
+  </div>
+);
 
 // --- COMPONENTE PRINCIPAL ---
 export default function Home() {
@@ -33,54 +51,59 @@ function LoginPage() {
     try {
       isLogin ? await loginWithEmail(email, pass) : await registerWithEmail(email, pass, name);
     } catch (err) {
-      setError('Error en credenciales. Intenta de nuevo.');
+      setError('Credenciales incorrectas. Verifica tus datos.');
     }
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"></div></div>;
+  if (loading) return <div className="h-screen flex items-center justify-center bg-[#F2F4F7]"><div className="w-10 h-10 border-4 border-[#007AFF] rounded-full animate-spin border-t-transparent"></div></div>;
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-[#F5F5F7]">
-      {/* Sección Izquierda (Formulario) */}
-      <div className="flex flex-col justify-center items-center p-8 lg:p-16 order-2 lg:order-1">
-        <div className="w-full max-w-md space-y-8 animate-enter">
+    <div className="min-h-screen grid lg:grid-cols-2 bg-[#F2F4F7] font-sans text-[#1D1D1F]">
+      {/* Panel Izquierdo */}
+      <div className="flex flex-col justify-center items-center p-8 lg:p-20 order-2 lg:order-1 relative">
+        <div className="w-full max-w-[380px] space-y-10 animate-enter z-10">
           <div className="text-center lg:text-left">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mb-6 mx-auto lg:mx-0 shadow-xl shadow-blue-500/30">
-              <Wallet className="w-8 h-8" />
-            </div>
-            <h1 className="text-4xl font-bold tracking-tight text-[#1D1D1F] mb-2">
-              {isLogin ? 'Bienvenido' : 'Crear Cuenta'}
-            </h1>
-            <p className="text-gray-500">Tu control financiero personal, simplificado.</p>
+            <BrandLogo className="mb-8 justify-center lg:justify-start" />
+            <h1 className="text-4xl font-extrabold tracking-tight mb-3">{isLogin ? 'Bienvenido' : 'Crear Cuenta'}</h1>
+            <p className="text-gray-500 text-lg leading-relaxed">Gestiona tu patrimonio con inteligencia.</p>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && <input type="text" placeholder="Tu nombre" className="ios-input" value={name} onChange={e => setName(e.target.value)} />}
-            <input type="email" placeholder="correo@ejemplo.com" className="ios-input" value={email} onChange={e => setEmail(e.target.value)} />
-            <input type="password" placeholder="••••••••" className="ios-input" value={pass} onChange={e => setPass(e.target.value)} />
-            
-            {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
-
-            <button className="ios-button w-full flex justify-center items-center gap-2">
-              {isLogin ? 'Entrar' : 'Registrarse'} <ArrowRight className="w-5 h-5" />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {!isLogin && (
+              <div className="group relative">
+                 <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-[#007AFF] transition-colors" />
+                 <input type="text" placeholder="Nombre completo" className="w-full bg-white border border-gray-200 rounded-2xl px-12 py-3.5 text-base font-medium outline-none transition-all focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10" value={name} onChange={e => setName(e.target.value)} />
+              </div>
+            )}
+            <div className="group relative">
+               <div className="absolute left-4 top-3.5 text-gray-400 text-sm font-bold">@</div>
+               <input type="email" placeholder="correo@ejemplo.com" className="w-full bg-white border border-gray-200 rounded-2xl px-12 py-3.5 text-base font-medium outline-none transition-all focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+            <div className="group relative">
+               <div className="absolute left-4 top-3.5 text-gray-400 text-sm font-bold">***</div>
+               <input type="password" placeholder="Contraseña" className="w-full bg-white border border-gray-200 rounded-2xl px-12 py-3.5 text-base font-medium outline-none transition-all focus:border-[#007AFF] focus:ring-4 focus:ring-[#007AFF]/10" value={pass} onChange={e => setPass(e.target.value)} />
+            </div>
+            {error && <div className="bg-red-50 text-red-500 px-4 py-3 rounded-xl text-sm font-medium border border-red-100 flex items-center gap-2"><X className="w-4 h-4"/>{error}</div>}
+            <button className="w-full bg-[#1D1D1F] text-white font-bold rounded-2xl px-6 py-4 active:scale-95 hover:bg-black transition-all shadow-xl shadow-gray-200 flex items-center justify-center gap-3">
+              {isLogin ? 'Iniciar Sesión' : 'Registrarse'} <ArrowRight className="w-5 h-5" />
             </button>
           </form>
-
-          <div className="text-center pt-4">
-            <button onClick={() => setIsLogin(!isLogin)} className="text-sm font-medium text-gray-500 hover:text-blue-600 transition">
-              {isLogin ? '¿No tienes cuenta? Regístrate gratis' : '¿Ya tienes cuenta? Inicia sesión'}
+          <div className="text-center pt-2">
+            <button onClick={() => setIsLogin(!isLogin)} className="text-sm font-semibold text-gray-500 hover:text-[#007AFF] transition-colors">
+              {isLogin ? '¿Nuevo aquí? Crea tu cuenta gratis' : '¿Ya tienes cuenta? Ingresa ahora'}
             </button>
           </div>
         </div>
       </div>
-
-      {/* Sección Derecha (Visual) */}
-      <div className="hidden lg:flex relative bg-black order-1 lg:order-2 overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900 opacity-90"></div>
-        <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=2000&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-50" alt="Finance" />
-        <div className="relative z-10 text-white text-center p-12">
-          <h2 className="text-5xl font-bold mb-6">Toma el control.</h2>
-          <p className="text-xl text-blue-100 max-w-lg mx-auto leading-relaxed">Gestiona tarjetas, suscripciones y gastos en una interfaz diseñada para darte paz mental.</p>
+      {/* Panel Derecho */}
+      <div className="hidden lg:flex relative bg-[#050505] order-1 lg:order-2 overflow-hidden items-center justify-center">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-blue-600/30 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px]"></div>
+        <div className="relative z-10 text-center px-12 max-w-2xl">
+          <div className="mb-8 inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-md rounded-3xl border border-white/10 shadow-2xl">
+            <Hexagon className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-5xl font-bold text-white mb-6 tracking-tight leading-tight">El sistema operativo de tus finanzas.</h2>
         </div>
       </div>
     </div>
@@ -92,281 +115,325 @@ function Dashboard({ user, logout }) {
   const { transactions, balance, income, expense, addTransaction, deleteTransaction } = useFinance();
   const { cards, addCard, deleteCard } = useCards();
   const { subs, totalFixed, addSubscription, deleteSubscription } = useSubscriptions();
+  
   const [activeModal, setActiveModal] = useState(null);
+  const [currentView, setCurrentView] = useState('overview');
 
   const formatCurrency = (amount) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
 
+  const renderContent = () => {
+    switch(currentView) {
+      case 'cards': return <CardsView cards={cards} add={() => setActiveModal('card')} del={deleteCard} fmt={formatCurrency} />;
+      case 'stats': return <StatsView />;
+      default: return (
+        <OverviewView 
+          data={{balance, income, expense, transactions, cards, subs, totalFixed}} 
+          actions={{addTrans: () => setActiveModal('transaction'), addSub: () => setActiveModal('sub'), addCard: () => setActiveModal('card'), delTrans: deleteTransaction, delSub: deleteSubscription, delCard: deleteCard, changeView: setCurrentView}} 
+          fmt={formatCurrency} 
+        />
+      );
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F5F5F7] flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#F2F4F7] font-sans text-[#1D1D1F]">
       
-      {/* 1. SIDEBAR (Solo Desktop) */}
-      <aside className="hidden md:flex flex-col w-[280px] h-screen fixed left-0 top-0 bg-white/80 backdrop-blur-xl border-r border-gray-200 z-50 p-6">
-        <div className="flex items-center gap-3 mb-10 px-2">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-            <Wallet className="w-5 h-5" />
-          </div>
-          <span className="font-bold text-xl tracking-tight">Mis Finanzas</span>
+      {/* SIDEBAR FLOTANTE */}
+      <aside className="hidden md:flex flex-col w-[270px] fixed left-4 top-4 bottom-4 bg-white/85 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] z-50 p-6 justify-between transition-all duration-300">
+        <div>
+          <div className="px-2 mb-12 mt-4"><BrandLogo /></div>
+          <nav className="space-y-2">
+            <SidebarItem icon={<LayoutGrid />} label="Resumen" active={currentView === 'overview'} onClick={() => setCurrentView('overview')} />
+            <SidebarItem icon={<CreditCard />} label="Billetera" active={currentView === 'cards'} onClick={() => setCurrentView('cards')} />
+            <SidebarItem icon={<PieChart />} label="Reportes" active={currentView === 'stats'} onClick={() => setCurrentView('stats')} />
+          </nav>
         </div>
-
-        <nav className="flex-1 space-y-2">
-          <SidebarItem icon={<LayoutGrid />} label="Resumen" active />
-          <SidebarItem icon={<CreditCard />} label="Tarjetas" />
-          <SidebarItem icon={<PieChart />} label="Estadísticas" />
-        </nav>
-
-        <div className="pt-6 border-t border-gray-100">
-          <div className="flex items-center gap-3 px-3 mb-4">
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
-              {user.displayName ? user.displayName[0] : 'U'}
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-bold truncate">{user.displayName}</p>
-              <p className="text-xs text-gray-500 truncate">Plan Pro</p>
-            </div>
+        <div className="bg-[#F5F7FA] rounded-3xl p-4 border border-gray-100">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#1D1D1F] font-bold border border-gray-100">{user.displayName ? user.displayName[0] : 'U'}</div>
+            <div className="flex-1 overflow-hidden"><p className="text-sm font-bold truncate">{user.displayName}</p><p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Cuenta Pro</p></div>
           </div>
-          <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition">
-            <LogOut className="w-4 h-4" /> Cerrar Sesión
-          </button>
+          <button onClick={logout} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold text-red-500 hover:bg-white hover:shadow-sm rounded-xl transition-all"><LogOut className="w-3.5 h-3.5" /> Cerrar Sesión</button>
         </div>
       </aside>
 
-      {/* 2. CONTENIDO PRINCIPAL */}
-      <main className="flex-1 md:ml-[280px] p-4 md:p-8 lg:p-12 pb-32 md:pb-8 max-w-[1600px] mx-auto w-full">
-        
-        {/* Header Movil */}
-        <div className="md:hidden flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                <span className="font-bold text-blue-600 text-lg">{user.displayName ? user.displayName[0] : 'U'}</span>
-             </div>
-             <div>
-               <p className="text-xs text-gray-500 font-medium">Hola de nuevo,</p>
-               <h1 className="text-xl font-bold">{user.displayName}</h1>
-             </div>
-          </div>
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="flex-1 md:ml-[290px] p-4 md:p-8 lg:p-10 pb-32 md:pb-8 max-w-[1400px]">
+        <div className="md:hidden flex justify-between items-center mb-8 pt-2">
+          <BrandLogo className="scale-90" />
           <button onClick={logout} className="p-2 bg-white rounded-full shadow-sm text-gray-400"><LogOut className="w-5 h-5"/></button>
         </div>
-
-        {/* Header Desktop */}
-        <div className="hidden md:flex justify-between items-end mb-8">
+        <div className="hidden md:flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-[#1D1D1F]">Panel de Control</h1>
-            <p className="text-gray-500 mt-1">Tu resumen financiero en tiempo real</p>
+            <h1 className="text-3xl font-extrabold text-[#1D1D1F] tracking-tight">{currentView === 'overview' ? 'Panel de Control' : currentView === 'cards' ? 'Mis Tarjetas' : 'Análisis'}</h1>
+            <p className="text-gray-400 font-medium mt-1">Resumen financiero en tiempo real</p>
           </div>
-          <button onClick={() => setActiveModal('transaction')} className="ios-button py-3 px-5 flex items-center gap-2 text-sm">
-            <Plus className="w-5 h-5" /> Nueva Transacción
+          <button onClick={() => setActiveModal('transaction')} className="group relative px-6 py-3 bg-[#1D1D1F] text-white rounded-2xl font-bold text-sm shadow-xl shadow-gray-200 hover:shadow-2xl hover:-translate-y-0.5 transition-all overflow-hidden">
+            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            <span className="relative flex items-center gap-2"><Plus className="w-4 h-4" /> Nueva Transacción</span>
           </button>
         </div>
-
-        {/* GRID DE DASHBOARD */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-          
-          {/* COLUMNA IZQUIERDA (Principal) - Span 8 */}
-          <div className="lg:col-span-8 space-y-6 lg:space-y-8">
-            
-            {/* Balance Card (Grande) */}
-            <div className="ios-card bg-[#1D1D1F] text-white p-6 md:p-10 relative overflow-hidden group">
-              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                <div>
-                  <p className="text-gray-400 font-medium mb-2">Disponible Neto</p>
-                  <h2 className="text-5xl md:text-6xl font-bold tracking-tight mb-2">
-                    {formatCurrency(balance - totalFixed)}
-                  </h2>
-                  <div className="flex items-center gap-2 text-gray-400 text-sm bg-white/10 px-3 py-1 rounded-lg w-fit backdrop-blur-md">
-                    <Zap className="w-3 h-3 text-yellow-400" />
-                    <span>Descontando {formatCurrency(totalFixed)} de fijos</span>
-                  </div>
-                </div>
-                <div className="flex gap-6 w-full md:w-auto bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/10">
-                   <div>
-                      <p className="text-xs text-gray-400 mb-1">Ingresos</p>
-                      <p className="text-lg font-bold text-green-400 flex items-center gap-1"><TrendingUp className="w-4 h-4"/> +{formatCurrency(income)}</p>
-                   </div>
-                   <div className="w-px bg-white/20"></div>
-                   <div>
-                      <p className="text-xs text-gray-400 mb-1">Gastos</p>
-                      <p className="text-lg font-bold text-red-400 flex items-center gap-1"><TrendingDown className="w-4 h-4"/> -{formatCurrency(expense)}</p>
-                   </div>
-                </div>
-              </div>
-              {/* Abstract Background */}
-              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/30 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/2 group-hover:bg-blue-600/40 transition-all duration-700"></div>
-            </div>
-
-            {/* Tarjetas de Crédito */}
-            <div>
-              <div className="flex justify-between items-center mb-4 px-1">
-                <h3 className="text-xl font-bold text-[#1D1D1F]">Mis Tarjetas</h3>
-                <button onClick={() => setActiveModal('card')} className="text-blue-600 text-sm font-semibold hover:bg-blue-50 px-3 py-1 rounded-lg transition">+ Agregar</button>
-              </div>
-              
-              {/* Grid en Desktop, Scroll en Mobile */}
-              <div className="flex md:grid md:grid-cols-2 gap-4 overflow-x-auto pb-4 md:pb-0 snap-x hide-scrollbar">
-                {cards.map((card) => (
-                  <div key={card.id} className={`snap-center min-w-[300px] h-52 rounded-[2rem] p-6 text-white shadow-lg relative flex flex-col justify-between bg-gradient-to-br ${card.bgGradient} ios-card-hover group`}>
-                     <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-white/60 text-xs font-medium uppercase tracking-wider mb-1">Banco</p>
-                          <h4 className="font-bold text-xl">{card.name}</h4>
-                        </div>
-                        <CreditCard className="w-6 h-6 opacity-80" />
-                     </div>
-                     
-                     <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-medium opacity-90">
-                          <span>Deuda: {formatCurrency(card.currentDebt)}</span>
-                          <span>{Math.round((card.currentDebt/card.limit)*100)}% usado</span>
-                        </div>
-                        <div className="w-full h-2 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
-                          <div className={`h-full rounded-full transition-all duration-1000 ${ (card.currentDebt / card.limit) > 0.8 ? 'bg-red-400' : 'bg-white' }`} style={{ width: `${Math.min((card.currentDebt / card.limit) * 100, 100)}%` }}></div>
-                        </div>
-                        <div className="flex justify-between items-end">
-                          <p className="text-xs bg-black/20 px-2 py-1 rounded-md backdrop-blur-sm border border-white/10">
-                            Corte: Día {card.cutoffDay} ({card.daysToCutoff} días)
-                          </p>
-                          <button onClick={(e) => { e.stopPropagation(); deleteCard(card.id); }} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-red-300"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                     </div>
-                  </div>
-                ))}
-                
-                {/* Botón Agregar (Card Style) */}
-                <button onClick={() => setActiveModal('card')} className="snap-center min-w-[100px] md:w-full h-52 border-2 border-dashed border-gray-300 rounded-[2rem] flex flex-col items-center justify-center text-gray-400 hover:bg-white hover:border-blue-300 hover:text-blue-500 transition-all group">
-                   <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-blue-50 flex items-center justify-center mb-2 transition-colors">
-                     <Plus className="w-6 h-6" />
-                   </div>
-                   <span className="font-medium text-sm">Nueva Tarjeta</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* COLUMNA DERECHA (Secundaria) - Span 4 */}
-          <div className="lg:col-span-4 space-y-6 lg:space-y-8">
-            
-            {/* Pagos Fijos */}
-            <div className="ios-card p-6 h-fit">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-lg">Próximos Pagos</h3>
-                <button onClick={() => setActiveModal('sub')} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full hover:bg-blue-50 hover:text-blue-600 transition"><Plus className="w-4 h-4"/></button>
-              </div>
-              <div className="space-y-4">
-                {subs.length === 0 ? <p className="text-center text-gray-400 text-sm py-4">Todo al día</p> : subs.map((sub) => (
-                  <div key={sub.id} className="flex items-center justify-between group">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${sub.category === 'home' ? 'bg-orange-100 text-orange-600' : sub.category === 'entertainment' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
-                        {sub.category === 'home' ? <HomeIcon className="w-5 h-5" /> : sub.category === 'entertainment' ? <Tv className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">{sub.name}</p>
-                        <p className="text-xs text-gray-500">{sub.daysLeft === 0 ? '¡Hoy!' : `${sub.daysLeft} días`}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-sm">{formatCurrency(sub.amount)}</p>
-                      <button onClick={() => deleteSubscription(sub.id)} className="text-[10px] text-red-400 opacity-0 group-hover:opacity-100 hover:underline">Borrar</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Últimos Movimientos */}
-            <div>
-              <h3 className="font-bold text-lg mb-4 px-1">Historial Reciente</h3>
-              <div className="space-y-3">
-                {transactions.slice(0, 5).map((t) => (
-                  <div key={t.id} className="ios-card p-4 flex justify-between items-center hover:bg-white transition-colors border-transparent hover:border-blue-100">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-600'}`}>
-                        {t.type === 'income' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm text-[#1D1D1F]">{t.description}</p>
-                        <p className="text-xs text-gray-400 capitalize">{t.category}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                       <p className={`font-bold ${t.type === 'income' ? 'text-green-600' : 'text-[#1D1D1F]'}`}>
-                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-                      </p>
-                      <button onClick={() => deleteTransaction(t.id)} className="text-gray-300 hover:text-red-500"><Trash2 className="w-3 h-3"/></button>
-                    </div>
-                  </div>
-                ))}
-                {transactions.length === 0 && <p className="text-center text-gray-400 text-sm py-8">Sin movimientos</p>}
-              </div>
-            </div>
-          </div>
-        </div>
-
+        {renderContent()}
       </main>
 
-      {/* MOBILE NAV (Solo Móvil) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-200 p-4 pb-6 flex justify-around items-center z-40">
-        <MobileNavItem icon={<LayoutGrid />} active />
-        <button onClick={() => setActiveModal('transaction')} className="w-14 h-14 bg-[#007AFF] rounded-full shadow-lg shadow-blue-500/30 flex items-center justify-center -mt-8 active:scale-95 transition-transform text-white">
-          <Plus className="w-7 h-7" />
-        </button>
-        <MobileNavItem icon={<CreditCard />} />
+      {/* MOBILE NAV */}
+      <div className="md:hidden fixed bottom-6 left-6 right-6 bg-[#1D1D1F]/90 backdrop-blur-xl rounded-[2rem] p-2 flex justify-between items-center z-40 shadow-2xl shadow-black/20 text-gray-400">
+        <MobileNavItem icon={<LayoutGrid />} active={currentView === 'overview'} onClick={() => setCurrentView('overview')} />
+        <button onClick={() => setActiveModal('transaction')} className="w-12 h-12 bg-[#007AFF] text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center -mt-8 border-4 border-[#F2F4F7] active:scale-95 transition-transform"><Plus className="w-6 h-6" /></button>
+        <MobileNavItem icon={<CreditCard />} active={currentView === 'cards'} onClick={() => setCurrentView('cards')} />
       </div>
 
-      {/* MODALES REUTILIZABLES */}
-      {activeModal === 'transaction' && <Modal close={() => setActiveModal(null)}><TransactionForm close={() => setActiveModal(null)} add={addTransaction} /></Modal>}
-      {activeModal === 'card' && <Modal close={() => setActiveModal(null)}><CardForm close={() => setActiveModal(null)} add={addCard} /></Modal>}
-      {activeModal === 'sub' && <Modal close={() => setActiveModal(null)}><SubForm close={() => setActiveModal(null)} add={addSubscription} /></Modal>}
+      {/* MODALES */}
+      {activeModal && (
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center" onClick={() => setActiveModal(null)}>
+          <div className="absolute inset-0 bg-[#050505]/40 backdrop-blur-sm transition-opacity"></div>
+          <div className="relative z-[110] w-full max-w-md bg-white md:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl overflow-hidden animate-enter" onClick={e => e.stopPropagation()}>
+             {activeModal === 'transaction' && <TransactionForm close={() => setActiveModal(null)} add={addTransaction} />}
+             {activeModal === 'card' && <CardForm close={() => setActiveModal(null)} add={addCard} />}
+             {activeModal === 'sub' && <SubForm close={() => setActiveModal(null)} add={addSubscription} />}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// --- SUB-COMPONENTES DE UI ---
+// --- VISTAS ---
+const OverviewView = ({ data, actions, fmt }) => (
+  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-enter">
+    <div className="lg:col-span-8 space-y-8">
+      {/* Balance Card Pro */}
+      <div className="rounded-[2.5rem] bg-[#121212] text-white p-8 md:p-10 relative overflow-hidden shadow-2xl group ring-1 ring-white/10">
+        <div className="relative z-10 flex flex-wrap md:flex-nowrap justify-between items-start md:items-end gap-8">
+          
+          <div className="flex-1 min-w-0">
+            <div className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div> Disponible Neto
+            </div>
+            <h2 className="text-5xl md:text-7xl font-bold tracking-tight mb-5 text-white truncate">{fmt(data.balance - data.totalFixed)}</h2>
+            <div className="inline-flex items-center gap-2 text-gray-300 text-xs font-semibold bg-white/5 px-4 py-2 rounded-full border border-white/5 backdrop-blur-md">
+              <Zap className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+              <span>Descontando {fmt(data.totalFixed)} de fijos</span>
+            </div>
+          </div>
 
-const SidebarItem = ({ icon, label, active }) => (
-  <button className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${active ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-[#1D1D1F]'}`}>
-    {icon} {label}
-  </button>
-);
+          <div className="w-full md:w-auto flex-shrink-0 bg-white/5 p-6 rounded-[2rem] backdrop-blur-md border border-white/5 flex items-center justify-between gap-8 hover:bg-white/10 transition-colors">
+             <div>
+                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide mb-1">Ingresos</p>
+                <p className="text-xl font-bold text-[#30D158] flex items-center gap-1"><TrendingUp className="w-5 h-5"/> {fmt(data.income)}</p>
+             </div>
+             <div className="w-px h-10 bg-white/10"></div>
+             <div>
+                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide mb-1">Gastos</p>
+                <p className="text-xl font-bold text-[#FF453A] flex items-center gap-1"><TrendingDown className="w-5 h-5"/> {fmt(data.expense)}</p>
+             </div>
+          </div>
+        </div>
+        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-blue-600/20 blur-[130px] rounded-full pointer-events-none"></div>
+        <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] bg-purple-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+      </div>
 
-const MobileNavItem = ({ icon, active }) => (
-  <button className={`p-2 rounded-xl ${active ? 'text-blue-600' : 'text-gray-400'}`}>
-    {icon}
-  </button>
-);
+      {/* Tarjetas */}
+      <div>
+        <div className="flex justify-between items-center mb-5 px-1">
+          <h3 className="text-xl font-bold text-[#1D1D1F] tracking-tight">Billetera</h3>
+          <button onClick={() => actions.changeView('cards')} className="text-[#007AFF] text-sm font-bold hover:bg-blue-50 px-4 py-2 rounded-xl transition-all">Ver detalles</button>
+        </div>
+        <div className="flex gap-5 overflow-x-auto pb-6 snap-x hide-scrollbar">
+          {data.cards.map(c => <div key={c.id} className="min-w-[320px] snap-center"><CardItem card={c} formatCurrency={fmt} deleteCard={actions.delCard} /></div>)}
+          <button onClick={actions.addCard} className="snap-center min-w-[100px] h-56 border-2 border-dashed border-gray-200 rounded-[2.5rem] flex flex-col items-center justify-center text-gray-400 hover:border-[#007AFF] hover:text-[#007AFF] hover:bg-white transition-all group gap-2"><div className="w-10 h-10 bg-gray-100 group-hover:bg-blue-50 rounded-full flex items-center justify-center transition-colors"><Plus className="w-5 h-5"/></div><span className="text-xs font-bold">Nueva</span></button>
+        </div>
+      </div>
+    </div>
 
-const Modal = ({ children, close }) => (
-  <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-enter" onClick={close}>
-    <div className="w-full max-w-md bg-[#F5F5F7] md:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-      {children}
+    <div className="lg:col-span-4 space-y-8">
+      {/* Pagos Fijos */}
+      <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 h-fit">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-bold text-lg text-[#1D1D1F]">Pagos Próximos</h3>
+          <button onClick={actions.addSub} className="w-9 h-9 flex items-center justify-center bg-[#F5F7FA] rounded-full hover:bg-[#007AFF] hover:text-white transition-colors"><Plus className="w-4 h-4"/></button>
+        </div>
+        <div className="space-y-5">
+          {data.subs.map(sub => (
+            <div key={sub.id} className="flex items-center justify-between group">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${sub.category === 'home' ? 'bg-orange-50 text-orange-500' : sub.category === 'entertainment' ? 'bg-purple-50 text-purple-500' : 'bg-blue-50 text-blue-500'}`}>
+                  {sub.category === 'home' ? <HomeIcon className="w-5 h-5" /> : sub.category === 'entertainment' ? <Tv className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-[#1D1D1F]">{sub.name}</p>
+                  <p className={`text-xs font-medium ${sub.daysLeft <= 3 ? 'text-red-500' : 'text-gray-400'}`}>{sub.daysLeft === 0 ? '¡Vence hoy!' : `${sub.daysLeft} días restantes`}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-sm text-[#1D1D1F]">{fmt(sub.amount)}</p>
+                <button onClick={() => actions.delSub(sub.id)} className="text-[10px] text-red-400 opacity-0 group-hover:opacity-100 hover:underline font-medium transition-opacity">Eliminar</button>
+              </div>
+            </div>
+          ))}
+          {data.subs.length === 0 && <p className="text-gray-400 text-sm text-center py-4">Estás al día 🎉</p>}
+        </div>
+      </div>
+
+      {/* Movimientos */}
+      <div>
+        <h3 className="font-bold text-lg mb-5 px-1 text-[#1D1D1F]">Historial</h3>
+        <div className="space-y-3">
+          {data.transactions.slice(0, 5).map(t => (
+            <div key={t.id} className="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-transparent hover:border-gray-100 transition-all hover:shadow-md group">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-500'}`}>
+                  {t.type === 'income' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-[#1D1D1F]">{t.description}</p>
+                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide">{t.category}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <p className={`font-bold text-sm ${t.type === 'income' ? 'text-green-600' : 'text-[#1D1D1F]'}`}>{t.type === 'income' ? '+' : '-'}{fmt(t.amount)}</p>
+                <button onClick={() => actions.delTrans(t.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4"/></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   </div>
 );
 
-// --- FORMULARIOS (Limpios y reutilizables) ---
+const CardsView = ({ cards, add, del, fmt }) => (
+  <div className="space-y-8 animate-enter">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+       {cards.map(c => <div key={c.id} className="h-full"><CardItem card={c} formatCurrency={fmt} deleteCard={del} /></div>)}
+       <button onClick={add} className="h-60 border-2 border-dashed border-gray-300 rounded-[2.5rem] flex flex-col items-center justify-center text-gray-400 hover:border-[#007AFF] hover:text-[#007AFF] hover:bg-white transition-all group bg-white/50"><div className="w-14 h-14 bg-white shadow-sm group-hover:shadow-md rounded-full flex items-center justify-center mb-3 transition-all"><Plus className="w-6 h-6"/></div><span className="font-bold">Agregar Tarjeta</span></button>
+    </div>
+  </div>
+);
 
+const StatsView = () => (
+   <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400 animate-enter text-center">
+     <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6"><PieChart className="w-10 h-10 text-gray-300" /></div>
+     <h3 className="text-xl font-bold text-[#1D1D1F] mb-2">Análisis Inteligente</h3>
+     <p className="max-w-xs">Tus gráficos detallados estarán disponibles en la próxima actualización.</p>
+   </div>
+);
+
+// --- COMPONENTES UI REUTILIZABLES ---
+const SidebarItem = ({ icon, label, active, onClick }) => (
+  <button onClick={onClick} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group ${active ? 'bg-[#1D1D1F] text-white shadow-lg shadow-gray-300 scale-105' : 'text-gray-500 hover:bg-[#F5F7FA] hover:text-[#1D1D1F]'}`}>
+    <span className={`${active ? 'text-white' : 'text-gray-400 group-hover:text-[#1D1D1F]'}`}>{icon}</span> {label}
+  </button>
+);
+
+const MobileNavItem = ({ icon, active, onClick }) => (
+  <button onClick={onClick} className={`p-4 rounded-2xl transition-all ${active ? 'bg-white/10 text-white' : 'text-gray-500'}`}>{icon}</button>
+);
+
+const CardItem = ({ card, formatCurrency, deleteCard }) => (
+  <div className={`h-56 rounded-[2.5rem] p-7 text-white shadow-xl relative flex flex-col justify-between bg-gradient-to-br ${card.bgGradient} group transition-all hover:-translate-y-2 hover:shadow-2xl overflow-hidden`}>
+      <div className="relative z-10 flex justify-between items-start">
+        <div><p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1">Banco</p><h4 className="font-bold text-2xl tracking-tight">{card.name}</h4></div>
+        <CreditCard className="w-8 h-8 opacity-50" />
+      </div>
+      <div className="relative z-10 space-y-4">
+        <div className="flex justify-between text-xs font-bold opacity-90"><span>{formatCurrency(card.currentDebt)}</span><span>{Math.round((card.currentDebt/card.limit)*100)}%</span></div>
+        <div className="w-full h-2.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${ (card.currentDebt / card.limit) > 0.8 ? 'bg-[#FF453A]' : 'bg-white' }`} style={{ width: `${Math.min((card.currentDebt / card.limit) * 100, 100)}%` }}></div></div>
+        <div className="flex justify-between items-end"><p className="text-[10px] font-semibold bg-black/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/10">Corte: Día {card.cutoffDay} ({card.daysToCutoff} días)</p><button onClick={(e) => { e.stopPropagation(); deleteCard(card.id); }} className="bg-white/20 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button></div>
+      </div>
+      <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none"></div>
+  </div>
+);
+
+// --- MODALES (NUEVO DISEÑO PREMIUM) ---
+
+// 1. Transaction Form Rediseñado (Sin bordes, texto gigante, estilo Apple)
 const TransactionForm = ({ close, add }) => {
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
   const [type, setType] = useState('expense');
+
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="font-bold text-xl">Nuevo Movimiento</h3>
-        <button onClick={close} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"><X className="w-4 h-4"/></button>
+    <div className="p-8 bg-white">
+      {/* Header Modal */}
+      <div className="flex justify-between items-center mb-8">
+        <h3 className="text-xl font-extrabold text-[#1D1D1F]">Nueva Transacción</h3>
+        <button onClick={close} className="w-9 h-9 flex items-center justify-center bg-[#F5F7FA] rounded-full hover:bg-gray-200 transition-colors">
+          <X className="w-5 h-5 text-gray-500"/>
+        </button>
       </div>
-      <div className="flex bg-gray-200/50 p-1 rounded-2xl mb-6">
-        {['expense', 'income'].map(t => (
-          <button key={t} onClick={() => setType(t)} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${type === t ? 'bg-white shadow-sm text-black' : 'text-gray-500'}`}>
-            {t === 'expense' ? 'Gasto' : 'Ingreso'}
-          </button>
-        ))}
+
+      {/* Selector Gasto/Ingreso */}
+      <div className="flex bg-[#F5F7FA] p-1.5 rounded-2xl mb-8 relative">
+        <button 
+          onClick={() => setType('expense')} 
+          className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+            type === 'expense' 
+              ? 'bg-white text-[#1D1D1F] shadow-sm scale-[1.02]' 
+              : 'text-gray-400 hover:text-gray-500'
+          }`}
+        >
+          Gasto
+        </button>
+        <button 
+          onClick={() => setType('income')} 
+          className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+            type === 'income' 
+              ? 'bg-white text-green-600 shadow-sm scale-[1.02]' 
+              : 'text-gray-400 hover:text-gray-500'
+          }`}
+        >
+          Ingreso
+        </button>
       </div>
-      <div className="space-y-4">
-        <div className="relative">
-          <span className="absolute left-4 top-4 text-gray-400 text-lg">$</span>
-          <input type="number" autoFocus placeholder="0.00" className="ios-input pl-8 text-2xl font-bold" value={amount} onChange={e => setAmount(e.target.value)} />
+
+      <div className="space-y-8">
+        {/* INPUT GIGANTE SIN BORDES */}
+        <div className="flex flex-col items-center justify-center py-4 relative group">
+          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity">
+            Monto
+          </label>
+          <div className="flex items-baseline justify-center">
+            <span className={`text-4xl font-bold mr-1 transition-colors ${!amount ? 'text-gray-200' : type === 'expense' ? 'text-[#1D1D1F]' : 'text-green-600'}`}>$</span>
+            {/* Input invisible visualmente pero funcional */}
+            <input 
+              type="number" 
+              autoFocus 
+              placeholder="0" 
+              className="w-full max-w-[200px] text-center text-7xl font-extrabold bg-transparent outline-none placeholder-gray-100 text-[#1D1D1F] caret-[#007AFF] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-0 m-0 leading-none" 
+              value={amount} 
+              onChange={e => setAmount(e.target.value)} 
+            />
+          </div>
         </div>
-        <input type="text" placeholder="¿En qué gastaste?" className="ios-input" value={desc} onChange={e => setDesc(e.target.value)} />
-        <button onClick={() => { if(amount) { add(amount, desc || 'Sin concepto', type, 'General'); close(); } }} className="ios-button w-full mt-2">Guardar</button>
+
+        {/* Input Concepto Estilizado */}
+        <div className="bg-[#F5F7FA] rounded-2xl px-5 py-4 flex items-center gap-4 border border-transparent focus-within:border-gray-200 focus-within:bg-white transition-all">
+          <div className={`p-2.5 rounded-full ${type === 'expense' ? 'bg-red-100 text-red-500' : 'bg-green-100 text-green-500'}`}>
+            {type === 'expense' ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+          </div>
+          <div className="flex-1">
+             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Concepto</label>
+             <input 
+               type="text" 
+               placeholder="Ej. Supermercado, Uber..." 
+               className="w-full bg-transparent font-bold text-lg outline-none text-[#1D1D1F] placeholder-gray-300" 
+               value={desc} 
+               onChange={e => setDesc(e.target.value)} 
+             />
+          </div>
+        </div>
+
+        {/* Botón Guardar */}
+        <button 
+          onClick={() => { if(amount) { add(amount, desc || (type === 'expense' ? 'Gasto General' : 'Ingreso Extra'), type, 'General'); close(); } }} 
+          disabled={!amount} 
+          className={`w-full py-4 rounded-2xl font-bold text-lg text-white shadow-xl flex justify-center items-center gap-2 active:scale-95 transition-all duration-300 ${
+            !amount ? 'bg-gray-200 cursor-not-allowed shadow-none' : type === 'expense' ? 'bg-[#1D1D1F] shadow-gray-300' : 'bg-green-600 shadow-green-200'
+          }`}
+        >
+          {amount ? `Guardar ${type === 'expense' ? 'Gasto' : 'Ingreso'}` : 'Ingresa un monto'}
+        </button>
       </div>
     </div>
   );
@@ -375,20 +442,9 @@ const TransactionForm = ({ close, add }) => {
 const CardForm = ({ close, add }) => {
   const [f, setF] = useState({ name: '', limit: '', debt: '', cut: '', pay: '' });
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-xl">Nueva Tarjeta</h3><button onClick={close} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"><X className="w-4 h-4"/></button></div>
-      <div className="space-y-4">
-        <input className="ios-input" placeholder="Nombre del Banco" value={f.name} onChange={e => setF({...f, name: e.target.value})} />
-        <div className="grid grid-cols-2 gap-4">
-          <input type="number" className="ios-input" placeholder="Límite" value={f.limit} onChange={e => setF({...f, limit: e.target.value})} />
-          <input type="number" className="ios-input" placeholder="Deuda Actual" value={f.debt} onChange={e => setF({...f, debt: e.target.value})} />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1"><label className="text-xs text-gray-500 ml-2">Día de Corte</label><input type="number" className="ios-input" placeholder="Ej. 15" value={f.cut} onChange={e => setF({...f, cut: e.target.value})} /></div>
-          <div className="space-y-1"><label className="text-xs text-gray-500 ml-2">Día de Pago</label><input type="number" className="ios-input" placeholder="Ej. 5" value={f.pay} onChange={e => setF({...f, pay: e.target.value})} /></div>
-        </div>
-        <button onClick={() => { if(f.name) { add(f.name, f.limit, f.cut, f.pay, f.debt); close(); } }} className="ios-button w-full mt-2">Guardar Tarjeta</button>
-      </div>
+    <div className="p-8 bg-white">
+      <div className="flex justify-between items-center mb-6"><h3 className="text-xl font-extrabold text-[#1D1D1F]">Nueva Tarjeta</h3><button onClick={close} className="w-9 h-9 flex items-center justify-center bg-[#F5F7FA] rounded-full hover:bg-gray-200"><X className="w-5 h-5 text-gray-500"/></button></div>
+      <div className="space-y-4"><input className="ios-input" placeholder="Nombre (Ej. Nu, BBVA)" value={f.name} onChange={e => setF({...f, name: e.target.value})} /><div className="grid grid-cols-2 gap-4"><input type="number" className="ios-input" placeholder="Límite Total" value={f.limit} onChange={e => setF({...f, limit: e.target.value})} /><input type="number" className="ios-input" placeholder="Deuda Actual" value={f.debt} onChange={e => setF({...f, debt: e.target.value})} /></div><div className="grid grid-cols-2 gap-4"><div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-2">Día Corte</label><input type="number" className="ios-input" placeholder="Ej. 15" value={f.cut} onChange={e => setF({...f, cut: e.target.value})} /></div><div className="space-y-1"><label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-2">Día Pago</label><input type="number" className="ios-input" placeholder="Ej. 5" value={f.pay} onChange={e => setF({...f, pay: e.target.value})} /></div></div><button onClick={() => { if(f.name) { add(f.name, f.limit, f.cut, f.pay, f.debt); close(); } }} className="w-full py-4 mt-4 bg-[#007AFF] text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all">Crear Tarjeta</button></div>
     </div>
   );
 };
@@ -396,23 +452,10 @@ const CardForm = ({ close, add }) => {
 const SubForm = ({ close, add }) => {
   const [f, setF] = useState({ name: '', amount: '', day: '', cat: 'service' });
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-xl">Pago Recurrente</h3><button onClick={close} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"><X className="w-4 h-4"/></button></div>
-      <div className="flex justify-center gap-4 mb-6">
-        {[{id:'home', icon:HomeIcon, color:'text-orange-600', bg:'bg-orange-100'}, {id:'entertainment', icon:Tv, color:'text-purple-600', bg:'bg-purple-100'}, {id:'service', icon:Zap, color:'text-blue-600', bg:'bg-blue-100'}].map(c => (
-          <button key={c.id} onClick={() => setF({...f, cat: c.id})} className={`p-4 rounded-2xl transition-all ${f.cat === c.id ? `${c.bg} ring-2 ring-offset-2 ring-gray-200 scale-110` : 'bg-white hover:bg-gray-50'}`}>
-            <c.icon className={`w-6 h-6 ${f.cat === c.id ? c.color : 'text-gray-400'}`} />
-          </button>
-        ))}
-      </div>
-      <div className="space-y-4">
-        <input className="ios-input" placeholder="Nombre (Ej. Renta)" value={f.name} onChange={e => setF({...f, name: e.target.value})} />
-        <div className="grid grid-cols-2 gap-4">
-          <input type="number" className="ios-input" placeholder="$ Monto" value={f.amount} onChange={e => setF({...f, amount: e.target.value})} />
-          <input type="number" max="31" className="ios-input" placeholder="Día (1-31)" value={f.day} onChange={e => setF({...f, day: e.target.value})} />
-        </div>
-        <button onClick={() => { if(f.name) { add(f.name, f.amount, f.day, f.cat); close(); } }} className="ios-button w-full mt-2">Guardar Pago</button>
-      </div>
+    <div className="p-8 bg-white">
+      <div className="flex justify-between items-center mb-6"><h3 className="text-xl font-extrabold text-[#1D1D1F]">Pago Fijo</h3><button onClick={close} className="w-9 h-9 flex items-center justify-center bg-[#F5F7FA] rounded-full hover:bg-gray-200"><X className="w-5 h-5 text-gray-500"/></button></div>
+      <div className="flex justify-center gap-6 mb-8">{[{id:'home', icon:HomeIcon, color:'text-orange-600', bg:'bg-orange-100'}, {id:'entertainment', icon:Tv, color:'text-purple-600', bg:'bg-purple-100'}, {id:'service', icon:Zap, color:'text-blue-600', bg:'bg-blue-100'}].map(c => (<button key={c.id} onClick={() => setF({...f, cat: c.id})} className={`p-4 rounded-2xl transition-all ${f.cat === c.id ? `${c.bg} ring-4 ring-gray-100 scale-110` : 'bg-gray-50 hover:bg-gray-100'}`}><c.icon className={`w-6 h-6 ${f.cat === c.id ? c.color : 'text-gray-400'}`} /></button>))}</div>
+      <div className="space-y-4"><input className="ios-input" placeholder="Nombre (Ej. Netflix)" value={f.name} onChange={e => setF({...f, name: e.target.value})} /><div className="grid grid-cols-2 gap-4"><input type="number" className="ios-input" placeholder="Monto" value={f.amount} onChange={e => setF({...f, amount: e.target.value})} /><input type="number" max="31" className="ios-input" placeholder="Día (1-31)" value={f.day} onChange={e => setF({...f, day: e.target.value})} /></div><button onClick={() => { if(f.name) { add(f.name, f.amount, f.day, f.cat); close(); } }} className="w-full py-4 mt-4 bg-[#1D1D1F] text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all">Programar</button></div>
     </div>
   );
 };
