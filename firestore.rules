@@ -1,17 +1,210 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // ============================================
+    // FUNCIONES AUXILIARES
+    // ============================================
+    
+    // Verifica si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica si el usuario es el propietario del documento
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Verifica si el email está verificado (opcional, más seguro)
+    function hasVerifiedEmail() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+    
+    // Limita el tamaño de strings para prevenir abuso
+    function isValidString(value, maxLength) {
+      return value is string && value.size() <= maxLength;
+    }
+    
+    // Valida que un número esté en rango
+    function isValidNumber(value, min, max) {
+      return value is number && value >= min && value <= max;
+    }
+    
+    // Valida timestamp (no en el futuro lejano)
+    function isValidTimestamp(value) {
+      return value is timestamp && value <= request.time + duration.value(1, 'd');
+    }
+    
+    // Verifica campos requeridos en el request
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    
+    // Limita el número de documentos que se pueden leer
+    function limitedQuery(maxDocs) {
+      return request.query.limit <= maxDocs;
+    }
+
+    // ============================================
+    // DOCUMENTO DEL USUARIO
+    // ============================================
+    
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Lectura: solo el propietario
+      allow read: if isOwner(userId);
+      
+      // Creación: solo el propietario, con campos válidos
+      allow create: if isOwner(userId)
+        && hasRequiredFields(['createdAt'])
+        && request.resource.data.createdAt == request.time;
+      
+      // Actualización: solo el propietario, sin modificar campos protegidos
+      allow update: if isOwner(userId)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt', 'uid']));
+      
+      // Eliminar: solo el propietario
+      allow delete: if isOwner(userId);
+
+      // ============================================
+      // TRANSACCIONES
+      // ============================================
+      
+      match /transactions/{transactionId} {
+        // Lectura: propietario, con límite de consulta
+        allow read: if isOwner(userId);
+        
+        // Creación: validar campos
+        allow create: if isOwner(userId)
+          && hasRequiredFields(['amount', 'type', 'createdAt'])
+          && isValidNumber(request.resource.data.amount, 0.01, 999999999)
+          && request.resource.data.type in ['income', 'expense']
+          && isValidString(request.resource.data.description, 200)
+          && isValidString(request.resource.data.category, 50);
+        
+        // Actualización: validar campos modificados
+        allow update: if isOwner(userId)
+          && isValidNumber(request.resource.data.amount, 0.01, 999999999)
+          && request.resource.data.type in ['income', 'expense']
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
+        
+        // Eliminar
+        allow delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // TARJETAS DE CRÉDITO
+      // ============================================
+      
+      match /credit_cards/{cardId} {
+        // Lectura
+        allow read: if isOwner(userId);
+        
+        // Creación: validar campos requeridos y rangos
+        allow create: if isOwner(userId)
+          && hasRequiredFields(['name', 'limit', 'createdAt'])
+          && isValidString(request.resource.data.name, 100)
+          && isValidNumber(request.resource.data.limit, 0, 999999999)
+          && isValidNumber(request.resource.data.currentDebt, 0, 999999999)
+          && isValidNumber(request.resource.data.cutoffDay, 1, 31)
+          && isValidNumber(request.resource.data.paymentDay, 1, 31);
+        
+        // Actualización
+        allow update: if isOwner(userId)
+          && isValidString(request.resource.data.name, 100)
+          && isValidNumber(request.resource.data.limit, 0, 999999999)
+          && isValidNumber(request.resource.data.currentDebt, 0, 999999999)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
+        
+        // Eliminar
+        allow delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // SUSCRIPCIONES
+      // ============================================
+      
+      match /subscriptions/{subscriptionId} {
+        // Lectura
+        allow read: if isOwner(userId);
+        
+        // Creación: validar campos
+        allow create: if isOwner(userId)
+          && hasRequiredFields(['name', 'amount', 'paymentDay', 'createdAt'])
+          && isValidString(request.resource.data.name, 100)
+          && isValidNumber(request.resource.data.amount, 0.01, 999999)
+          && isValidNumber(request.resource.data.paymentDay, 1, 31)
+          && isValidString(request.resource.data.category, 50);
+        
+        // Actualización
+        allow update: if isOwner(userId)
+          && isValidString(request.resource.data.name, 100)
+          && isValidNumber(request.resource.data.amount, 0.01, 999999)
+          && isValidNumber(request.resource.data.paymentDay, 1, 31)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
+        
+        // Eliminar
+        allow delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // PRESUPUESTOS (para futuro)
+      // ============================================
+      
+      match /budgets/{budgetId} {
+        allow read: if isOwner(userId);
+        
+        allow create: if isOwner(userId)
+          && hasRequiredFields(['name', 'amount', 'createdAt'])
+          && isValidString(request.resource.data.name, 100)
+          && isValidNumber(request.resource.data.amount, 0.01, 999999999)
+          && isValidNumber(request.resource.data.spent, 0, 999999999);
+        
+        allow update: if isOwner(userId)
+          && isValidNumber(request.resource.data.amount, 0.01, 999999999)
+          && isValidNumber(request.resource.data.spent, 0, 999999999)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
+        
+        allow delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // METAS DE AHORRO (para futuro)
+      // ============================================
+      
+      match /savingsGoals/{goalId} {
+        allow read: if isOwner(userId);
+        
+        allow create: if isOwner(userId)
+          && hasRequiredFields(['name', 'targetAmount', 'createdAt'])
+          && isValidString(request.resource.data.name, 100)
+          && isValidNumber(request.resource.data.targetAmount, 0.01, 999999999)
+          && isValidNumber(request.resource.data.currentAmount, 0, 999999999);
+        
+        allow update: if isOwner(userId)
+          && isValidNumber(request.resource.data.targetAmount, 0.01, 999999999)
+          && isValidNumber(request.resource.data.currentAmount, 0, 999999999)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
+        
+        allow delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // CUALQUIER OTRA SUBCOLECCIÓN - DENEGAR
+      // ============================================
+      
+      match /{subcollection}/{docId} {
+        allow read, write: if false;
+      }
     }
-    match /users/{userId}/transactions/{transactionId} {
-      allow read, write, delete: if request.auth != null && request.auth.uid == userId;
-    }
-    match /users/{userId}/credit_cards/{credit_card_id} {
-        allow read, write, delete: if request.auth != null && request.auth.uid == userId;
-    }
-    match /users/{userId}/subscriptions/{subscription_id} {
-        allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+
+    // ============================================
+    // DENEGAR TODO LO DEMÁS
+    // ============================================
+    
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

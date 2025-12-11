@@ -1,40 +1,105 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../firebase/auth';
-import { useFinance } from '../hooks/useFinance';
-import { useCards } from '../hooks/useCards';
-import { useSubscriptions } from '../hooks/useSubscriptions';
-import { useTheme } from 'next-themes';
+import { useFinance, EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../hooks/useFinance';
+import { useCards, CARD_GRADIENTS } from '../hooks/useCards';
+import { useSubscriptions, SUBSCRIPTION_CATEGORIES } from '../hooks/useSubscriptions';
+import { useThemeMounted } from '../components/theme-provider';
 import { 
   Plus, TrendingUp, TrendingDown, Trash2, X, CreditCard, 
-  Home as HomeIcon, Tv, Zap, LayoutGrid, PieChart, 
-  LogOut, ArrowRight, User, Hexagon, Moon, Sun
+  Wallet, Calendar, LayoutGrid, ChartPie, LogOut, 
+  ArrowRight, User, Moon, Sun, ChevronRight, Bell,
+  Sparkles, CircleDollarSign, Receipt, Eye, EyeOff,
+  Check, AlertCircle, Target, PiggyBank
 } from 'lucide-react';
 
-const BrandLogo = ({ className = "w-8 h-8", dark = false }) => (
-  <div className={`flex items-center gap-3 ${className}`}>
-    <div className="relative flex items-center justify-center group">
-      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative w-10 h-10 transform group-hover:rotate-12 transition-transform duration-500 ease-out z-10">
-        <path d="M20 12C15.5817 12 12 15.5817 12 20C12 24.4183 15.5817 28 20 28C24.4183 28 28 24.4183 28 20" stroke="hsl(var(--foreground))" strokeWidth="2.5" strokeLinecap="round"/>
-        <path d="M28 20C28 15.5817 24.4183 12 20 12" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinecap="round"/>
-        <circle cx="20" cy="20" r="3" fill="hsl(var(--foreground))"/>
-      </svg>
+// ============================================
+// BRAND & ICONS
+// ============================================
+
+const BrandLogo = ({ size = 'default' }) => {
+  const sizes = {
+    small: { container: 'gap-2', icon: 'w-7 h-7', text: 'text-base' },
+    default: { container: 'gap-2.5', icon: 'w-8 h-8', text: 'text-lg' },
+    large: { container: 'gap-3', icon: 'w-10 h-10', text: 'text-xl' },
+  };
+  const s = sizes[size] || sizes.default;
+
+  return (
+    <div className={`flex items-center ${s.container}`}>
+      <div className={`${s.icon} rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center`}>
+        <CircleDollarSign className="w-1/2 h-1/2 text-primary" />
+      </div>
+      <span className={`font-semibold ${s.text} text-foreground tracking-tight`}>
+        Fin<span className="text-primary">Nexus</span>
+      </span>
     </div>
-    <span className={`font-bold text-xl tracking-tight text-foreground`}>
-      Fin<span className="text-primary">Nexus</span>
-    </span>
-  </div>
-);
+  );
+};
+
+const CategoryIcon = ({ category, type = 'expense', size = 'default' }) => {
+  const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  const cat = categories.find(c => c.id === category) || categories.find(c => c.id === 'other');
+  
+  const sizes = {
+    small: 'w-8 h-8 rounded-lg',
+    default: 'w-10 h-10 rounded-xl',
+    large: 'w-12 h-12 rounded-2xl',
+  };
+
+  const colorMap = {
+    orange: 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20',
+    blue: 'bg-blue-500/10 text-blue-500 dark:bg-blue-500/20',
+    purple: 'bg-purple-500/10 text-purple-500 dark:bg-purple-500/20',
+    pink: 'bg-pink-500/10 text-pink-500 dark:bg-pink-500/20',
+    red: 'bg-red-500/10 text-red-500 dark:bg-red-500/20',
+    indigo: 'bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20',
+    gray: 'bg-gray-500/10 text-gray-500 dark:bg-gray-500/20',
+    amber: 'bg-amber-500/10 text-amber-500 dark:bg-amber-500/20',
+    cyan: 'bg-cyan-500/10 text-cyan-500 dark:bg-cyan-500/20',
+    slate: 'bg-slate-500/10 text-slate-500 dark:bg-slate-500/20',
+    green: 'bg-green-500/10 text-green-500 dark:bg-green-500/20',
+    emerald: 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20',
+    yellow: 'bg-yellow-500/10 text-yellow-500 dark:bg-yellow-500/20',
+  };
+
+  return (
+    <div className={`${sizes[size]} ${colorMap[cat?.color] || colorMap.slate} flex items-center justify-center flex-shrink-0`}>
+      {type === 'income' ? (
+        <TrendingUp className="w-1/2 h-1/2" />
+      ) : (
+        <TrendingDown className="w-1/2 h-1/2" />
+      )}
+    </div>
+  );
+};
+
+// ============================================
+// MAIN APP
+// ============================================
 
 export default function Home() {
   const { user, loading } = useAuth();
   
-  if (loading) return <div className="h-screen w-full flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary rounded-full animate-spin border-t-transparent"></div></div>;
+  if (loading) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (!user) return <LoginPage />;
-
   return <Dashboard user={user} />;
 }
+
+// ============================================
+// LOGIN PAGE
+// ============================================
 
 function LoginPage() {
   const { loginWithEmail, registerWithEmail, loading: authLoading } = useAuth();
@@ -43,538 +108,2105 @@ function LoginPage() {
   const [pass, setPass] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    
     setError('');
+    setIsSubmitting(true);
+    
     try {
-      isLogin ? await loginWithEmail(email, pass) : await registerWithEmail(email, pass, name);
+      if (isLogin) {
+        await loginWithEmail(email, pass);
+      } else {
+        await registerWithEmail(email, pass, name);
+      }
     } catch (err) {
-      setError('Credenciales incorrectas. Verifica tus datos.');
+      setError(err.message || 'Credenciales incorrectas. Verifica tus datos.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (authLoading) return <div className="h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary rounded-full animate-spin border-t-transparent"></div></div>;
+  if (authLoading) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-secondary/50 font-sans text-foreground">
-      <div className="flex flex-col justify-center items-center p-8 lg:p-20 order-2 lg:order-1 relative">
-        <div className="w-full max-w-[380px] space-y-10 animate-enter z-10">
-          <div className="text-center lg:text-left">
-            <BrandLogo className="mb-8 justify-center lg:justify-start" />
-            <h1 className="text-4xl font-extrabold tracking-tight mb-3">{isLogin ? 'Bienvenido' : 'Crear Cuenta'}</h1>
-            <p className="text-muted-foreground text-lg leading-relaxed">Gestiona tu patrimonio con inteligencia.</p>
+    <div className="min-h-[100dvh] bg-background flex flex-col">
+      {/* Mobile Layout */}
+      <div className="flex-1 flex flex-col lg:hidden">
+        <div className="px-6 pt-12 pb-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6">
+            <CircleDollarSign className="w-8 h-8 text-primary" />
           </div>
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <h1 className="text-2xl font-bold text-foreground mb-2">
+            {isLogin ? 'Bienvenido de vuelta' : 'Crea tu cuenta'}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Gestiona tus finanzas de forma inteligente
+          </p>
+        </div>
+
+        <div className="flex-1 bg-card rounded-t-[2rem] px-6 pt-8 pb-safe">
+          <form onSubmit={handleSubmit} className="space-y-4 max-w-sm mx-auto">
             {!isLogin && (
-              <div className="group relative">
-                 <User className="absolute left-4 top-3.5 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                 <input type="text" placeholder="Nombre completo" className="w-full bg-card border border-border rounded-2xl px-12 py-3.5 text-base font-medium outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10" value={name} onChange={e => setName(e.target.value)} />
+              <InputField
+                icon={<User className="w-5 h-5" />}
+                type="text"
+                placeholder="Nombre completo"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                autoComplete="name"
+              />
+            )}
+            
+            <InputField
+              icon={<span className="text-sm font-medium">@</span>}
+              type="email"
+              placeholder="correo@ejemplo.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              autoComplete="email"
+            />
+            
+            <InputField
+              icon={<span className="text-sm font-medium">•••</span>}
+              type="password"
+              placeholder="Contraseña"
+              value={pass}
+              onChange={e => setPass(e.target.value)}
+              autoComplete={isLogin ? "current-password" : "new-password"}
+            />
+
+            {error && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{error}</span>
               </div>
             )}
-            <div className="group relative">
-               <div className="absolute left-4 top-3.5 text-muted-foreground text-sm font-bold">@</div>
-               <input type="email" placeholder="correo@ejemplo.com" className="w-full bg-card border border-border rounded-2xl px-12 py-3.5 text-base font-medium outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10" value={email} onChange={e => setEmail(e.target.value)} />
-            </div>
-            <div className="group relative">
-               <div className="absolute left-4 top-3.5 text-muted-foreground text-sm font-bold">***</div>
-               <input type="password" placeholder="Contraseña" className="w-full bg-card border border-border rounded-2xl px-12 py-3.5 text-base font-medium outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10" value={pass} onChange={e => setPass(e.target.value)} />
-            </div>
-            {error && <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-xl text-sm font-medium border border-destructive/20 flex items-center gap-2"><X className="w-4 h-4"/>{error}</div>}
-            <button className="w-full bg-foreground text-background font-bold rounded-2xl px-6 py-4 active:scale-95 hover:bg-foreground/90 transition-all shadow-xl shadow-gray-200 dark:shadow-black/20 flex items-center justify-center gap-3">
-              {isLogin ? 'Iniciar Sesión' : 'Registrarse'} <ArrowRight className="w-5 h-5" />
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setIsLogin(!isLogin); setError(''); }}
+              className="w-full py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
             </button>
           </form>
-          <div className="text-center pt-2">
-            <button onClick={() => setIsLogin(!isLogin)} className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">
-              {isLogin ? '¿Nuevo aquí? Crea tu cuenta gratis' : '¿Ya tienes cuenta? Ingresa ahora'}
-            </button>
-          </div>
         </div>
       </div>
-      <div className="hidden lg:flex relative bg-foreground order-1 lg:order-2 overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-blue-600/30 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px]"></div>
-        <div className="relative z-10 text-center px-12 max-w-2xl">
-          <div className="mb-8 inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-md rounded-3xl border border-white/10 shadow-2xl">
-            <Hexagon className="w-10 h-10 text-white" />
+
+      {/* Desktop Layout */}
+      <div className="hidden lg:grid lg:grid-cols-2 min-h-[100dvh]">
+        <div className="flex items-center justify-center p-12">
+          <div className="w-full max-w-md space-y-8">
+            <div>
+              <BrandLogo size="large" />
+              <h1 className="text-3xl font-bold text-foreground mt-8 mb-2">
+                {isLogin ? 'Bienvenido de vuelta' : 'Crea tu cuenta'}
+              </h1>
+              <p className="text-muted-foreground">
+                Gestiona tus finanzas personales de forma inteligente
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <InputField
+                  icon={<User className="w-5 h-5" />}
+                  type="text"
+                  placeholder="Nombre completo"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  autoComplete="name"
+                />
+              )}
+              
+              <InputField
+                icon={<span className="text-sm font-medium">@</span>}
+                type="email"
+                placeholder="correo@ejemplo.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+              
+              <InputField
+                icon={<span className="text-sm font-medium">•••</span>}
+                type="password"
+                placeholder="Contraseña"
+                value={pass}
+                onChange={e => setPass(e.target.value)}
+                autoComplete={isLogin ? "current-password" : "new-password"}
+              />
+
+              {error && (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="text-center">
+              <button
+                onClick={() => { setIsLogin(!isLogin); setError(''); }}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {isLogin ? '¿No tienes cuenta? Regístrate gratis' : '¿Ya tienes cuenta? Inicia sesión'}
+              </button>
+            </div>
           </div>
-          <h2 className="text-5xl font-bold text-background mb-6 tracking-tight leading-tight">El sistema operativo de tus finanzas.</h2>
+        </div>
+
+        <div className="bg-gradient-to-br from-primary/5 via-background to-primary/10 dark:from-primary/10 dark:via-background dark:to-primary/5 flex items-center justify-center p-12 relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+          <div className="relative text-center max-w-lg">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary/10 dark:bg-primary/20 mb-8 ring-1 ring-primary/20">
+              <Sparkles className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-4xl font-bold text-foreground mb-4">
+              Tu dinero, bajo control
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Visualiza tus gastos, administra tus tarjetas y nunca pierdas de vista tus suscripciones.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+const InputField = ({ icon, ...props }) => (
+  <div className="relative group">
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+      {icon}
+    </div>
+    <input
+      {...props}
+      className="w-full h-12 bg-secondary/50 dark:bg-secondary/30 border border-border/50 rounded-xl pl-12 pr-4 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+    />
+  </div>
+);
+
+// ============================================
+// DASHBOARD
+// ============================================
 
 function Dashboard({ user }) {
   const { logout } = useAuth();
-  const { transactions, balance, income, expense, addTransaction, deleteTransaction, loadingData } = useFinance();
-  const { cards, addCard, deleteCard, loadingCards } = useCards();
-  const { subs, totalFixed, addSubscription, deleteSubscription, loadingSubs } = useSubscriptions();
+  const { theme, setTheme, mounted } = useThemeMounted();
+  
+  const { 
+    transactions, 
+    balance, 
+    income, 
+    expense, 
+    addTransaction, 
+    deleteTransaction, 
+    loadingData,
+    expenseCategories,
+    incomeCategories,
+  } = useFinance();
+  
+  const { 
+    cards, 
+    addCard, 
+    deleteCard,
+    loadingCards,
+    availableGradients,
+    canAddMore: canAddMoreCards,
+    totalDebt,
+    totalLimit,
+  } = useCards();
+  
+  const { 
+    subs, 
+    totals: subTotals,
+    alerts: subAlerts,
+    addSubscription, 
+    deleteSubscription,
+    markAsPaid,
+    loadingSubs,
+    categories: subCategories,
+  } = useSubscriptions();
   
   const [activeModal, setActiveModal] = useState(null);
   const [currentView, setCurrentView] = useState('overview');
+  const [showBalance, setShowBalance] = useState(true);
 
-  const formatCurrency = (amount) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
+  const formatCurrency = useCallback((amount) => {
+    return new Intl.NumberFormat('es-MX', { 
+      style: 'currency', 
+      currency: 'MXN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+  }, []);
   
   const isLoading = loadingData || loadingCards || loadingSubs;
 
-  const renderContent = () => {
-    if (isLoading) {
-      return <DashboardSkeleton />;
-    }
-    switch(currentView) {
-      case 'cards': return <CardsView cards={cards} add={() => setActiveModal('card')} del={deleteCard} fmt={formatCurrency} />;
-      case 'stats': return <StatsView />;
-      default: return (
-        <OverviewView 
-          data={{balance, income, expense, transactions, cards, subs, totalFixed}} 
-          actions={{addTrans: () => setActiveModal('transaction'), addSub: () => setActiveModal('sub'), addCard: () => setActiveModal('card'), delTrans: deleteTransaction, delSub: deleteSubscription, delCard: deleteCard, changeView: setCurrentView}} 
-          fmt={formatCurrency} 
-        />
-      );
-    }
-  };
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  }, [theme, setTheme]);
+
+  // Datos para reportes
+  const reportData = useMemo(() => ({
+    transactions,
+    balance,
+    income,
+    expense,
+    cards,
+    subs,
+    subTotals,
+    totalDebt,
+    totalLimit,
+  }), [transactions, balance, income, expense, cards, subs, subTotals, totalDebt, totalLimit]);
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground">
-      <aside className="hidden md:flex flex-col w-[270px] fixed left-4 top-4 bottom-4 bg-card/80 backdrop-blur-2xl rounded-[2.5rem] border border-border/60 shadow-[0_8px_32px_rgba(0,0,0,0.02)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.1)] z-50 p-6 justify-between transition-all duration-300">
-        <div>
-          <div className="px-2 mb-12 mt-4"><BrandLogo /></div>
-          <nav className="space-y-2">
-            <SidebarItem icon={<LayoutGrid />} label="Resumen" active={currentView === 'overview'} onClick={() => setCurrentView('overview')} />
-            <SidebarItem icon={<CreditCard />} label="Billetera" active={currentView === 'cards'} onClick={() => setCurrentView('cards')} />
-            <SidebarItem icon={<PieChart />} label="Reportes" active={currentView === 'stats'} onClick={() => setCurrentView('stats')} />
-          </nav>
+    <div className="min-h-[100dvh] bg-background">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-card/50 backdrop-blur-xl border-r border-border/50 p-4 z-40">
+        <div className="p-2 mb-6">
+          <BrandLogo />
         </div>
-        <UserProfile user={user} logout={logout} />
+
+        <nav className="flex-1 space-y-1">
+          <NavItem 
+            icon={<LayoutGrid className="w-5 h-5" />} 
+            label="Resumen" 
+            active={currentView === 'overview'} 
+            onClick={() => setCurrentView('overview')} 
+          />
+          <NavItem 
+            icon={<Wallet className="w-5 h-5" />} 
+            label="Tarjetas" 
+            active={currentView === 'cards'} 
+            onClick={() => setCurrentView('cards')} 
+          />
+          <NavItem 
+            icon={<Calendar className="w-5 h-5" />} 
+            label="Suscripciones" 
+            active={currentView === 'subscriptions'} 
+            onClick={() => setCurrentView('subscriptions')}
+            badge={subAlerts.dueSoon.length + subAlerts.dueToday.length}
+          />
+          <NavItem 
+            icon={<ChartPie className="w-5 h-5" />} 
+            label="Reportes" 
+            active={currentView === 'stats'} 
+            onClick={() => setCurrentView('stats')} 
+          />
+        </nav>
+
+        <div className="border-t border-border/50 pt-4 space-y-2">
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
+          >
+            {mounted && (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
+            <span className="text-sm font-medium">{mounted && (theme === 'dark' ? 'Modo claro' : 'Modo oscuro')}</span>
+          </button>
+          
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+              {user.displayName?.[0] || user.email?.[0] || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{user.displayName || 'Usuario'}</p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+            <button 
+              onClick={logout}
+              className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </aside>
 
-      <main className="flex-1 md:ml-[290px] p-4 md:p-8 lg:p-10 pb-32 md:pb-8 max-w-[1400px]">
-        <div className="md:hidden flex justify-between items-center mb-8 pt-2">
-          <BrandLogo className="scale-90" />
-          <button onClick={logout} className="p-2 bg-card rounded-full shadow-sm text-muted-foreground"><LogOut className="w-5 h-5"/></button>
-        </div>
-        <div className="hidden md:flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-3xl font-extrabold text-foreground tracking-tight">{currentView === 'overview' ? 'Panel de Control' : currentView === 'cards' ? 'Mis Tarjetas' : 'Análisis'}</h1>
-            <p className="text-muted-foreground font-medium mt-1">Resumen financiero en tiempo real</p>
+      {/* Main Content */}
+      <main className="lg:pl-64">
+        {/* Mobile Header */}
+        <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
+          <div className="flex items-center justify-between px-4 h-14">
+            <BrandLogo size="small" />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                {mounted && (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
+              </button>
+              <button
+                onClick={logout}
+                className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <button onClick={() => setActiveModal('transaction')} className="group relative px-6 py-3 bg-foreground text-background rounded-2xl font-bold text-sm shadow-xl shadow-gray-200 dark:shadow-black/20 hover:shadow-2xl hover:-translate-y-0.5 transition-all overflow-hidden">
-            <div className="absolute inset-0 bg-white/10 dark:bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-            <span className="relative flex items-center gap-2"><Plus className="w-4 h-4" /> Nueva Transacción</span>
-          </button>
+        </header>
+
+        {/* Content */}
+        <div className="p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 max-w-6xl mx-auto">
+          {isLoading ? (
+            <DashboardSkeleton />
+          ) : (
+            <>
+              {currentView === 'overview' && (
+                <OverviewView 
+                  data={{ balance, income, expense, transactions, cards, subs, subTotals, subAlerts }}
+                  actions={{ 
+                    setActiveModal, 
+                    deleteTransaction, 
+                    deleteCard,
+                    deleteSub: deleteSubscription,
+                    setCurrentView,
+                  }}
+                  formatCurrency={formatCurrency}
+                  showBalance={showBalance}
+                  setShowBalance={setShowBalance}
+                />
+              )}
+              {currentView === 'cards' && (
+                <CardsView 
+                  cards={cards}
+                  addCard={() => setActiveModal('card')}
+                  deleteCard={deleteCard}
+                  formatCurrency={formatCurrency}
+                  canAddMore={canAddMoreCards}
+                />
+              )}
+              {currentView === 'subscriptions' && (
+                <SubscriptionsView
+                  subs={subs}
+                  totals={subTotals}
+                  alerts={subAlerts}
+                  addSub={() => setActiveModal('subscription')}
+                  deleteSub={deleteSubscription}
+                  markAsPaid={markAsPaid}
+                  formatCurrency={formatCurrency}
+                  categories={subCategories}
+                />
+              )}
+              {currentView === 'stats' && (
+                <StatsView 
+                  data={reportData}
+                  formatCurrency={formatCurrency}
+                />
+              )}
+            </>
+          )}
         </div>
-        {renderContent()}
       </main>
 
-      <div className="md:hidden fixed bottom-6 left-6 right-6 bg-foreground/90 backdrop-blur-xl rounded-[2rem] p-2 flex justify-around items-center z-40 shadow-2xl shadow-black/20 text-gray-400">
-        <MobileNavItem icon={<LayoutGrid />} active={currentView === 'overview'} onClick={() => setCurrentView('overview')} />
-        <button onClick={() => setActiveModal('transaction')} className="w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center -mt-8 border-4 border-background active:scale-95 transition-transform"><Plus className="w-6 h-6" /></button>
-        <MobileNavItem icon={<CreditCard />} active={currentView === 'cards'} onClick={() => setCurrentView('cards')} />
-      </div>
-
-      {activeModal && (
-        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center" onClick={() => setActiveModal(null)}>
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"></div>
-          <div className="relative z-[110] w-full max-w-md bg-card md:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl overflow-hidden animate-enter" onClick={e => e.stopPropagation()}>
-             {activeModal === 'transaction' && <TransactionForm close={() => setActiveModal(null)} add={addTransaction} />}
-             {activeModal === 'card' && <CardForm close={() => setActiveModal(null)} add={addCard} />}
-             {activeModal === 'sub' && <SubForm close={() => setActiveModal(null)} add={addSubscription} />}
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border/50 safe-area-bottom z-40">
+        <div className="flex items-center justify-around h-16 max-w-md mx-auto">
+          <MobileNavItem 
+            icon={<LayoutGrid />} 
+            label="Inicio" 
+            active={currentView === 'overview'} 
+            onClick={() => setCurrentView('overview')} 
+          />
+          <MobileNavItem 
+            icon={<Wallet />} 
+            label="Tarjetas" 
+            active={currentView === 'cards'} 
+            onClick={() => setCurrentView('cards')} 
+          />
+          
+          {/* FAB */}
+          <div className="relative -mt-6">
+            <button
+              onClick={() => setActiveModal('transaction')}
+              className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/30 flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
           </div>
+          
+          <MobileNavItem 
+            icon={<Calendar />} 
+            label="Pagos" 
+            active={currentView === 'subscriptions'} 
+            onClick={() => setCurrentView('subscriptions')}
+            badge={subAlerts.dueSoon.length + subAlerts.dueToday.length}
+          />
+          <MobileNavItem 
+            icon={<ChartPie />} 
+            label="Stats" 
+            active={currentView === 'stats'} 
+            onClick={() => setCurrentView('stats')} 
+          />
         </div>
-      )}
+      </nav>
+
+      {/* Modals */}
+      <Modal isOpen={activeModal === 'transaction'} onClose={() => setActiveModal(null)}>
+        <TransactionForm 
+          onClose={() => setActiveModal(null)} 
+          onSubmit={addTransaction}
+          expenseCategories={expenseCategories}
+          incomeCategories={incomeCategories}
+        />
+      </Modal>
+
+      <Modal isOpen={activeModal === 'card'} onClose={() => setActiveModal(null)}>
+        <CardForm 
+          onClose={() => setActiveModal(null)} 
+          onSubmit={addCard}
+          gradients={availableGradients}
+        />
+      </Modal>
+
+      <Modal isOpen={activeModal === 'subscription'} onClose={() => setActiveModal(null)}>
+        <SubscriptionForm 
+          onClose={() => setActiveModal(null)} 
+          onSubmit={addSubscription}
+          categories={subCategories}
+        />
+      </Modal>
     </div>
   );
 }
 
-const OverviewView = ({ data, actions, fmt }) => (
-  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-enter">
-    <div className="lg:col-span-8 space-y-8">
-      <div className="rounded-[2.5rem] bg-foreground text-background p-8 md:p-10 relative overflow-hidden shadow-2xl group ring-1 ring-black/10 dark:ring-white/5">
-        <div className="absolute top-[-50%] right-[-30%] w-[800px] h-[800px] bg-blue-600/20 blur-[150px] rounded-full pointer-events-none opacity-60"></div>
-        <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-8">
-          <div className="flex-1">
-            <div className="text-blue-300 dark:text-blue-300 text-opacity-80 font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div> Balance Total
-            </div>
-            <h2 className="text-5xl md:text-6xl font-bold tracking-tighter mb-4 text-background">{fmt(data.balance)}</h2>
-            <div className="inline-flex items-center gap-2 text-gray-300 dark:text-gray-300 text-opacity-80 text-xs font-semibold bg-white/5 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
-              <Zap className="w-3.5 h-3.5 text-yellow-400" />
-              <span>{fmt(data.totalFixed)} en gastos fijos</span>
-            </div>
-          </div>
-          <div className="w-full md:w-auto flex-shrink-0 flex md:flex-col gap-4">
-             <div className="flex-1 bg-white/5 p-5 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/10 transition-colors">
-                <p className="text-[10px] text-gray-300 dark:text-gray-300 text-opacity-80 uppercase font-bold tracking-wide mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-green-400"/>Ingresos</p>
-                <p className="text-2xl font-semibold text-background">{fmt(data.income)}</p>
-             </div>
-             <div className="flex-1 bg-white/5 p-5 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/10 transition-colors">
-                <p className="text-[10px] text-gray-300 dark:text-gray-300 text-opacity-80 uppercase font-bold tracking-wide mb-1 flex items-center gap-1.5"><TrendingDown className="w-3.5 h-3.5 text-red-400"/>Gastos</p>
-                <p className="text-2xl font-semibold text-background">{fmt(data.expense)}</p>
-             </div>
-          </div>
-        </div>
-      </div>
-      <div className="bg-card rounded-[2.5rem] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none border border-border/50">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-foreground tracking-tight">Billetera</h3>
-          <button onClick={() => actions.changeView('cards')} className="text-primary text-sm font-bold hover:bg-accent px-4 py-2 rounded-xl transition-all">Ver todo</button>
-        </div>
-        <div className="relative h-44 flex items-center">
-          {data.cards.map((c, i) => (
-            <div key={c.id} className="absolute w-full max-w-sm transition-all duration-300 ease-out" style={{ transform: `translateX(${i * 20}px) translateY(${i * -10}px) rotate(${i * 2}deg)`, zIndex: data.cards.length - i }}>
-              <CardItem card={c} formatCurrency={fmt} deleteCard={actions.delCard} inStack={true} />
-            </div>
-          ))}
-          {data.cards.length < 5 && (
-            <button onClick={actions.addCard} className="absolute right-0 top-1/2 -translate-y-1/2 w-28 h-40 bg-card border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary hover:bg-accent transition-all group gap-2 shadow-sm" style={{ zIndex: 0 }}>
-              <div className="w-10 h-10 bg-secondary group-hover:bg-primary/10 rounded-full flex items-center justify-center transition-colors"><Plus className="w-5 h-5"/></div>
-              <span className="text-xs font-bold">Nueva</span>
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-    <div className="lg:col-span-4 space-y-8">
-      <div className="bg-card rounded-[2.5rem] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none border border-border/50 h-fit">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-bold text-lg text-foreground">Pagos Próximos</h3>
-          <button onClick={actions.addSub} className="w-9 h-9 flex items-center justify-center bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"><Plus className="w-4 h-4"/></button>
-        </div>
-        <div className="space-y-5">
-          {data.subs.map(sub => (
-            <div key={sub.id} className="flex items-center justify-between group">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${sub.category === 'home' ? 'bg-orange-100 dark:bg-orange-500/10 text-orange-500' : sub.category === 'entertainment' ? 'bg-purple-100 dark:bg-purple-500/10 text-purple-500' : 'bg-blue-100 dark:bg-blue-500/10 text-blue-500'}`}>
-                  {sub.category === 'home' ? <HomeIcon className="w-5 h-5" /> : sub.category === 'entertainment' ? <Tv className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
-                </div>
-                <div>
-                  <p className="font-bold text-sm text-foreground">{sub.name}</p>
-                  <p className={`text-xs font-medium ${sub.daysLeft <= 3 ? 'text-destructive' : 'text-muted-foreground'}`}>{sub.daysLeft === 0 ? '¡Vence hoy!' : `${sub.daysLeft} días restantes`}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-sm text-foreground">{fmt(sub.amount)}</p>
-                <button onClick={() => actions.delSub(sub.id)} className="text-[10px] text-red-400 opacity-0 group-hover:opacity-100 hover:underline font-medium transition-opacity">Eliminar</button>
-              </div>
-            </div>
-          ))}
-          {data.subs.length === 0 && <p className="text-muted-foreground text-sm text-center py-4">Estás al día 🎉</p>}
-        </div>
-      </div>
-      <div>
-        <h3 className="font-bold text-lg mb-5 px-1 text-foreground">Historial</h3>
-        <div className="space-y-3">
-          {data.transactions.slice(0, 5).map(t => (
-            <div key={t.id} className="bg-card p-5 rounded-3xl flex justify-between items-center shadow-sm border border-transparent hover:border-border transition-all hover:shadow-md group">
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-500/10 text-green-600' : 'bg-secondary text-muted-foreground'}`}>
-                  {t.type === 'income' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                </div>
-                <div>
-                  <p className="font-bold text-sm text-foreground">{t.description}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wide">{t.category}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <p className={`font-bold text-sm ${t.type === 'income' ? 'text-green-600' : 'text-foreground'}`}>{t.type === 'income' ? '+' : '-'}{fmt(t.amount)}</p>
-                <button onClick={() => actions.delTrans(t.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4"/></button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
+// ============================================
+// NAVIGATION COMPONENTS
+// ============================================
+
+const NavItem = ({ icon, label, active, onClick, badge }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+      active 
+        ? 'bg-primary text-primary-foreground' 
+        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+    }`}
+  >
+    {icon}
+    <span className="flex-1 text-left">{label}</span>
+    {badge > 0 && (
+      <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold flex items-center justify-center ${
+        active ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'
+      }`}>
+        {badge}
+      </span>
+    )}
+  </button>
 );
 
-const CardsView = ({ cards, add, del, fmt }) => (
-  <div className="space-y-8 animate-enter">
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-       {cards.map(c => <div key={c.id} className="h-full"><CardItem card={c} formatCurrency={fmt} deleteCard={del} /></div>)}
-       <button onClick={add} className="h-60 border-2 border-dashed border-border rounded-[2.5rem] flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary hover:bg-card transition-all group bg-card/50"><div className="w-14 h-14 bg-card shadow-sm group-hover:shadow-md rounded-full flex items-center justify-center mb-3 transition-all"><Plus className="w-6 h-6"/></div><span className="font-bold">Agregar Tarjeta</span></button>
+const MobileNavItem = ({ icon, label, active, onClick, badge }) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center gap-1 p-2 min-w-[56px] relative ${
+      active ? 'text-primary' : 'text-muted-foreground'
+    }`}
+  >
+    <div className="relative">
+      {icon}
+      {badge > 0 && (
+        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-[10px] font-semibold text-white flex items-center justify-center">
+          {badge}
+        </span>
+      )}
     </div>
-  </div>
+    <span className="text-[10px] font-medium">{label}</span>
+  </button>
 );
 
-const StatsView = () => (
-   <div className="flex flex-col items-center justify-center h-[60vh] text-muted-foreground animate-enter text-center">
-     <div className="w-24 h-24 bg-secondary rounded-full flex items-center justify-center mb-6"><PieChart className="w-10 h-10 text-muted-foreground/50" /></div>
-     <h3 className="text-xl font-bold text-foreground mb-2">Análisis Inteligente</h3>
-     <p className="max-w-xs">Tus gráficos detallados estarán disponibles en la próxima actualización.</p>
-   </div>
-);
+// ============================================
+// OVERVIEW VIEW
+// ============================================
 
-const UserProfile = ({ user, logout }) => {
-  const { theme, setTheme } = useTheme();
+const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalance }) => {
+  const { balance, income, expense, transactions, cards, subs, subTotals, subAlerts } = data;
 
   return (
-    <div className="group relative">
-      <div className="flex items-center gap-4 px-2 py-4">
-        <div className="w-10 h-10 rounded-full bg-secondary shadow-sm flex items-center justify-center text-foreground font-bold border border-border">{user.displayName ? user.displayName[0] : 'U'}</div>
-        <div className="flex-1 overflow-hidden">
-          <p className="text-sm font-bold truncate text-foreground">{user.displayName}</p>
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Cuenta Pro</p>
+    <div className="space-y-6 animate-enter">
+      {/* Balance Card */}
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-5 sm:p-6">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Balance Total</span>
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:text-white transition-colors"
+            >
+              {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+          </div>
+          
+          <div className="mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+              {showBalance ? formatCurrency(balance) : '••••••'}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/10 backdrop-blur rounded-xl p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-[10px] text-slate-300 uppercase font-medium">Ingresos</span>
+              </div>
+              <p className="text-lg font-semibold text-white">
+                {showBalance ? formatCurrency(income) : '••••'}
+              </p>
+            </div>
+            <div className="bg-white/10 backdrop-blur rounded-xl p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingDown className="w-3.5 h-3.5 text-red-400" />
+                <span className="text-[10px] text-slate-300 uppercase font-medium">Gastos</span>
+              </div>
+              <p className="text-lg font-semibold text-white">
+                {showBalance ? formatCurrency(expense) : '••••'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Actions */}
+      <section className="grid grid-cols-3 gap-3">
+        <QuickAction 
+          icon={<Plus className="w-5 h-5" />}
+          label="Transacción"
+          onClick={() => actions.setActiveModal('transaction')}
+          primary
+        />
+        <QuickAction 
+          icon={<CreditCard className="w-5 h-5" />}
+          label="Tarjeta"
+          onClick={() => actions.setActiveModal('card')}
+        />
+        <QuickAction 
+          icon={<Calendar className="w-5 h-5" />}
+          label="Suscripción"
+          onClick={() => actions.setActiveModal('subscription')}
+        />
+      </section>
+
+      {/* Alerts */}
+      {(subAlerts.dueToday.length > 0 || subAlerts.dueSoon.length > 0) && (
+        <section className="bg-amber-500/10 dark:bg-amber-500/20 rounded-2xl p-4">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+            <Bell className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              {subAlerts.dueToday.length > 0 
+                ? `${subAlerts.dueToday.length} pago(s) vence(n) hoy`
+                : `${subAlerts.dueSoon.length} pago(s) próximo(s)`
+              }
+            </span>
+          </div>
+        </section>
+      )}
+
+      {/* Cards Preview */}
+      {cards.length > 0 && (
+        <section>
+          <SectionHeader 
+            title="Mis Tarjetas" 
+            action="Ver todas"
+            onAction={() => actions.setCurrentView('cards')}
+          />
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide snap-x">
+            {cards.slice(0, 3).map(card => (
+              <div key={card.id} className="flex-shrink-0 w-64 snap-start">
+                <MiniCard card={card} formatCurrency={formatCurrency} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Recent Transactions */}
+      <section>
+        <SectionHeader title="Últimas Transacciones" />
+        <div className="space-y-2">
+          {transactions.slice(0, 5).map(t => (
+            <TransactionItem 
+              key={t.id} 
+              transaction={t} 
+              formatCurrency={formatCurrency}
+              onDelete={() => actions.deleteTransaction(t.id)}
+            />
+          ))}
+          {transactions.length === 0 && (
+            <EmptyState 
+              icon={<Receipt className="w-8 h-8" />}
+              message="No hay transacciones aún"
+            />
+          )}
+        </div>
+      </section>
+
+      {/* Upcoming Payments */}
+      {subs.length > 0 && (
+        <section>
+          <SectionHeader 
+            title="Próximos Pagos"
+            subtitle={`${formatCurrency(subTotals.monthlyTotal)}/mes`}
+            action="Ver todos"
+            onAction={() => actions.setCurrentView('subscriptions')}
+          />
+          <div className="space-y-2">
+            {subs.slice(0, 3).map(sub => (
+              <SubscriptionItem 
+                key={sub.id} 
+                subscription={sub} 
+                formatCurrency={formatCurrency}
+                onDelete={() => actions.deleteSub(sub.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+};
+
+const QuickAction = ({ icon, label, onClick, primary }) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all active:scale-95 ${
+      primary 
+        ? 'bg-primary text-primary-foreground' 
+        : 'bg-card border border-border/50 text-foreground hover:bg-secondary/50'
+    }`}
+  >
+    {icon}
+    <span className="text-xs font-medium">{label}</span>
+  </button>
+);
+
+const SectionHeader = ({ title, subtitle, action, onAction }) => (
+  <div className="flex items-center justify-between mb-3">
+    <div>
+      <h3 className="font-semibold text-foreground">{title}</h3>
+      {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+    </div>
+    {action && (
+      <button 
+        onClick={onAction}
+        className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+      >
+        {action}
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    )}
+  </div>
+);
+
+const MiniCard = ({ card, formatCurrency }) => {
+  const gradientMap = {
+    'from-blue-500 to-blue-700': 'from-blue-500 to-blue-700',
+    'from-purple-500 to-indigo-600': 'from-purple-500 to-indigo-600',
+    'from-slate-700 to-black': 'from-slate-700 to-slate-900',
+    'from-rose-400 to-orange-400': 'from-rose-400 to-orange-500',
+    'from-emerald-500 to-teal-700': 'from-emerald-500 to-teal-600',
+  };
+
+  const gradient = gradientMap[card.bgGradient] || 'from-slate-600 to-slate-800';
+  const utilizationPercent = card.limit > 0 ? Math.min((card.currentDebt / card.limit) * 100, 100) : 0;
+
+  return (
+    <div className={`bg-gradient-to-br ${gradient} rounded-2xl p-4 text-white h-36 flex flex-col justify-between`}>
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-xs text-white/70 font-medium">{card.name}</p>
+          <p className="text-lg font-bold mt-0.5">{formatCurrency(card.currentDebt)}</p>
+        </div>
+        <CreditCard className="w-5 h-5 text-white/50" />
+      </div>
+      <div>
+        <div className="flex justify-between text-[10px] text-white/70 mb-1">
+          <span>Usado</span>
+          <span>{Math.round(utilizationPercent)}%</span>
+        </div>
+        <div className="h-1.5 bg-black/20 rounded-full overflow-hidden">
+          <div 
+            className={`h-full rounded-full transition-all ${utilizationPercent > 80 ? 'bg-red-400' : 'bg-white/80'}`}
+            style={{ width: `${utilizationPercent}%` }}
+          />
         </div>
       </div>
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary text-muted-foreground hover:bg-border">
-          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
-        <button onClick={logout} className="w-8 h-8 flex items-center justify-center rounded-full bg-secondary text-muted-foreground hover:bg-destructive/20 hover:text-destructive ml-1">
-          <LogOut className="w-4 h-4" />
+    </div>
+  );
+};
+
+const TransactionItem = ({ transaction, formatCurrency, onDelete }) => {
+  const isIncome = transaction.type === 'income';
+  
+  return (
+    <div className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border/50 group">
+      <CategoryIcon category={transaction.category} type={transaction.type} size="default" />
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm text-foreground truncate">{transaction.description}</p>
+        <p className="text-xs text-muted-foreground capitalize">{transaction.category}</p>
+      </div>
+      <div className="text-right flex items-center gap-2">
+        <p className={`font-semibold text-sm ${isIncome ? 'text-green-500' : 'text-foreground'}`}>
+          {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+        </p>
+        <button 
+          onClick={onDelete}
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
   );
 };
 
+const SubscriptionItem = ({ subscription, formatCurrency, onDelete }) => {
+  const isUrgent = subscription.daysLeft <= 3;
+  
+  return (
+    <div className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border/50 group">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+        isUrgent ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'
+      }`}>
+        <Calendar className="w-5 h-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm text-foreground truncate">{subscription.name}</p>
+        <p className={`text-xs ${isUrgent ? 'text-amber-500 font-medium' : 'text-muted-foreground'}`}>
+          {subscription.daysLeft === 0 ? '¡Vence hoy!' : `En ${subscription.daysLeft} días`}
+        </p>
+      </div>
+      <div className="text-right flex items-center gap-2">
+        <p className="font-semibold text-sm text-foreground">{formatCurrency(subscription.amount)}</p>
+        <button 
+          onClick={onDelete}
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
-const SidebarItem = ({ icon, label, active, onClick }) => (
-  <button onClick={onClick} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 group ${active ? 'bg-foreground text-background shadow-lg shadow-gray-200 dark:shadow-black/20 scale-105' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}>
-    <span className={`${active ? 'text-background' : 'text-muted-foreground group-hover:text-foreground'}`}>{icon}</span> {label}
-  </button>
+const EmptyState = ({ icon, message }) => (
+  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+    <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+      {icon}
+    </div>
+    <p className="text-sm">{message}</p>
+  </div>
 );
 
-const MobileNavItem = ({ icon, active, onClick }) => (
-  <button onClick={onClick} className={`p-4 rounded-2xl transition-all ${active ? 'bg-primary/80 text-primary-foreground' : 'text-gray-500'}`}>
-    {icon}
-  </button>
+// ============================================
+// CARDS VIEW
+// ============================================
+
+const CardsView = ({ cards, addCard, deleteCard, formatCurrency, canAddMore }) => (
+  <div className="space-y-6 animate-enter">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Mis Tarjetas</h1>
+        <p className="text-sm text-muted-foreground">{cards.length} tarjeta(s) registrada(s)</p>
+      </div>
+      {canAddMore && (
+        <button
+          onClick={addCard}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Agregar
+        </button>
+      )}
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {cards.map(card => (
+        <CardItem 
+          key={card.id} 
+          card={card} 
+          formatCurrency={formatCurrency}
+          onDelete={() => deleteCard(card.id)}
+        />
+      ))}
+      
+      {cards.length === 0 && (
+        <div className="col-span-full">
+          <EmptyState 
+            icon={<CreditCard className="w-8 h-8" />}
+            message="No hay tarjetas registradas"
+          />
+        </div>
+      )}
+    </div>
+  </div>
 );
 
-const CardItem = ({ card, formatCurrency, deleteCard, inStack = false }) => {
-  const gradients = {
-    'from-blue-500 to-blue-700': 'linear-gradient(to bottom right, #3b82f6, #1d4ed8)',
-    'from-purple-500 to-indigo-600': 'linear-gradient(to bottom right, #a855f7, #4f46e5)',
-    'from-slate-700 to-black': 'linear-gradient(to bottom right, #334155, #000000)',
-    'from-rose-400 to-orange-400': 'linear-gradient(to bottom right, #fb7185, #fb923c)',
-    'from-emerald-500 to-teal-700': 'linear-gradient(to bottom right, #10b981, #0d9488)',
-  };
-  const bgStyle = {
-    backgroundImage: gradients[card.bgGradient] || 'linear-gradient(to bottom right, #6b7280, #1f2937)',
+const CardItem = ({ card, formatCurrency, onDelete }) => {
+  const gradientMap = {
+    'from-blue-500 to-blue-700': 'from-blue-500 to-blue-700',
+    'from-purple-500 to-indigo-600': 'from-purple-500 to-indigo-600',
+    'from-slate-700 to-black': 'from-slate-700 to-slate-900',
+    'from-rose-400 to-orange-400': 'from-rose-400 to-orange-500',
+    'from-emerald-500 to-teal-700': 'from-emerald-500 to-teal-600',
+    'from-pink-500 to-rose-500': 'from-pink-500 to-rose-500',
+    'from-cyan-400 to-blue-500': 'from-cyan-400 to-blue-500',
+    'from-amber-400 to-orange-500': 'from-amber-400 to-orange-500',
   };
 
-  const cardHeight = inStack ? 'h-40' : 'h-56';
+  const gradient = gradientMap[card.bgGradient] || 'from-slate-600 to-slate-800';
+  const utilizationPercent = card.limit > 0 ? Math.min((card.currentDebt / card.limit) * 100, 100) : 0;
+  const isHighUtilization = utilizationPercent > 80;
 
   return (
-    <div
-      style={bgStyle}
-      className={`${cardHeight} rounded-[1.75rem] p-6 text-white shadow-xl relative flex flex-col justify-between group transition-all hover:-translate-y-1 hover:shadow-2xl overflow-hidden`}
-    >
-      <div className="relative z-10 flex justify-between items-start">
-        <div>
-          <p className="text-white/70 text-xs font-bold uppercase tracking-wider mb-1">
-            {inStack ? card.name.split(' ')[0] : 'Banco'}
-          </p>
-          {!inStack && <h4 className="font-bold text-2xl tracking-tight">{card.name}</h4>}
-        </div>
-        {!inStack && <CreditCard className="w-8 h-8 opacity-50" />}
-      </div>
-      <div className="relative z-10 space-y-3">
-        {!inStack && (
-          <>
-            <div className="flex justify-between text-xs font-bold opacity-90">
-              <span>{formatCurrency(card.currentDebt)}</span>
-              <span>{Math.round((card.currentDebt / card.limit) * 100)}%</span>
-            </div>
-            <div className="w-full h-2 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${(card.currentDebt / card.limit) > 0.8 ? 'bg-[#FF453A]' : 'bg-white'}`}
-                style={{ width: `${Math.min((card.currentDebt / card.limit) * 100, 100)}%` }}
-              ></div>
-            </div>
-          </>
-        )}
-        <div className="flex justify-between items-end">
-          <p className="text-[10px] font-semibold bg-black/20 px-2.5 py-1.5 rounded-lg backdrop-blur-md border border-white/10">
-            Corte: Día {card.cutoffDay} ({card.daysToCutoff} d)
-          </p>
+    <div className={`bg-gradient-to-br ${gradient} rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white relative overflow-hidden group`}>
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iIzAwMDAwMCIgZmlsbC1vcGFjaXR5PSIwLjAzIj48L3JlY3Q+Cjwvc3ZnPg==')] opacity-50" />
+      
+      <div className="relative">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <p className="text-xs text-white/60 font-medium uppercase tracking-wider">Tarjeta</p>
+            <h3 className="text-xl font-bold mt-1">{card.name}</h3>
+          </div>
           <button
-            onClick={(e) => { e.stopPropagation(); deleteCard(card.id); }}
-            className="bg-white/20 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+            onClick={onDelete}
+            className="p-2 rounded-lg bg-white/10 text-white/70 hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex justify-between items-baseline mb-2">
+            <span className="text-2xl sm:text-3xl font-bold">{formatCurrency(card.currentDebt)}</span>
+            <span className="text-sm text-white/70">de {formatCurrency(card.limit)}</span>
+          </div>
+          <div className="h-2 bg-black/20 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${isHighUtilization ? 'bg-red-400' : 'bg-white/80'}`}
+              style={{ width: `${utilizationPercent}%` }}
+            />
+          </div>
+          <p className="text-xs text-white/60 mt-1">{Math.round(utilizationPercent)}% utilizado</p>
+        </div>
+
+        <div className="flex gap-3 text-xs">
+          <div className="bg-black/20 backdrop-blur rounded-lg px-3 py-2">
+            <span className="text-white/60">Corte</span>
+            <span className="ml-2 text-white font-medium">Día {card.cutoffDay}</span>
+          </div>
+          <div className="bg-black/20 backdrop-blur rounded-lg px-3 py-2">
+            <span className="text-white/60">Pago</span>
+            <span className="ml-2 text-white font-medium">Día {card.paymentDay}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// SUBSCRIPTIONS VIEW
+// ============================================
+
+const SubscriptionsView = ({ subs, totals, alerts, addSub, deleteSub, markAsPaid, formatCurrency, categories }) => (
+  <div className="space-y-6 animate-enter">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Suscripciones</h1>
+        <p className="text-sm text-muted-foreground">{formatCurrency(totals.monthlyTotal)}/mes</p>
+      </div>
+      <button
+        onClick={addSub}
+        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+      >
+        <Plus className="w-4 h-4" />
+        Agregar
+      </button>
+    </div>
+
+    {/* Summary Cards */}
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <SummaryCard label="Este mes" value={formatCurrency(totals.thisMonthTotal)} />
+      <SummaryCard label="Mensual" value={formatCurrency(totals.monthlyTotal)} />
+      <SummaryCard label="Próx. 7 días" value={formatCurrency(totals.next7DaysTotal)} highlight={totals.next7DaysTotal > 0} />
+      <SummaryCard label="Anual" value={formatCurrency(totals.annualTotal)} />
+    </div>
+
+    {/* Alerts */}
+    {(alerts.overdue?.length > 0 || alerts.dueToday?.length > 0) && (
+      <div className="bg-destructive/10 rounded-2xl p-4">
+        <div className="flex items-center gap-2 text-destructive mb-2">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-sm font-medium">Atención requerida</span>
+        </div>
+        <div className="space-y-2">
+          {[...(alerts.overdue || []), ...(alerts.dueToday || [])].map(sub => (
+            <div key={sub.id} className="flex items-center justify-between text-sm">
+              <span className="text-foreground">{sub.name}</span>
+              <span className="text-destructive font-medium">{formatCurrency(sub.amount)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* Subscription List */}
+    <div className="space-y-2">
+      {subs.map(sub => (
+        <SubscriptionDetailItem 
+          key={sub.id} 
+          subscription={sub} 
+          formatCurrency={formatCurrency}
+          onDelete={() => deleteSub(sub.id)}
+          onMarkPaid={() => markAsPaid(sub.id)}
+        />
+      ))}
+      
+      {subs.length === 0 && (
+        <EmptyState 
+          icon={<Calendar className="w-8 h-8" />}
+          message="No hay suscripciones registradas"
+        />
+      )}
+    </div>
+  </div>
+);
+
+const SummaryCard = ({ label, value, highlight }) => (
+  <div className={`p-4 rounded-2xl ${highlight ? 'bg-amber-500/10 dark:bg-amber-500/20' : 'bg-card border border-border/50'}`}>
+    <p className={`text-xs font-medium mb-1 ${highlight ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>{label}</p>
+    <p className={`text-lg font-bold ${highlight ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>{value}</p>
+  </div>
+);
+
+const SubscriptionDetailItem = ({ subscription, formatCurrency, onDelete, onMarkPaid }) => {
+  const isUrgent = subscription.daysLeft <= 3;
+  const isDueToday = subscription.daysLeft === 0;
+  
+  return (
+    <div className={`flex items-center gap-3 p-4 rounded-2xl border group transition-colors ${
+      isDueToday 
+        ? 'bg-amber-500/5 border-amber-500/20' 
+        : 'bg-card border-border/50 hover:border-border'
+    }`}>
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        isDueToday ? 'bg-amber-500/10 text-amber-500' : 'bg-secondary text-muted-foreground'
+      }`}>
+        <Calendar className="w-5 h-5" />
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-foreground truncate">{subscription.name}</p>
+        <p className={`text-xs ${isUrgent ? 'text-amber-500 font-medium' : 'text-muted-foreground'}`}>
+          {isDueToday ? '¡Vence hoy!' : subscription.daysLeft === 1 ? 'Mañana' : `En ${subscription.daysLeft} días`}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <p className="font-semibold text-foreground">{formatCurrency(subscription.amount)}</p>
+        
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={onMarkPaid}
+            className="p-1.5 rounded-lg text-green-500 hover:bg-green-500/10 transition-colors"
+            title="Marcar como pagado"
+          >
+            <Check className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
-      <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none"></div>
     </div>
   );
 };
 
-const TransactionForm = ({ close, add }) => {
-  const [amount, setAmount] = useState('');
-  const [desc, setDesc] = useState('');
-  const [type, setType] = useState('expense');
+// ============================================
+// STATS VIEW (REPORTES)
+// ============================================
+
+const StatsView = ({ data, formatCurrency }) => {
+  const { transactions, balance, income, expense, cards, subs, subTotals, totalDebt, totalLimit } = data;
+
+  // Transacciones del mes actual
+  const currentMonthTransactions = useMemo(() => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    return transactions.filter(t => {
+      const date = t.date instanceof Date ? t.date : new Date(t.date);
+      return date >= startOfMonth;
+    });
+  }, [transactions]);
+
+  // Transacciones del mes anterior
+  const lastMonthTransactions = useMemo(() => {
+    const now = new Date();
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    
+    return transactions.filter(t => {
+      const date = t.date instanceof Date ? t.date : new Date(t.date);
+      return date >= startOfLastMonth && date <= endOfLastMonth;
+    });
+  }, [transactions]);
+
+  // Gastos por categoría
+  const expensesByCategory = useMemo(() => {
+    const expenses = currentMonthTransactions.filter(t => t.type === 'expense');
+    const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
+    const grouped = {};
+    
+    expenses.forEach(t => {
+      const cat = t.category || 'other';
+      if (!grouped[cat]) {
+        grouped[cat] = { amount: 0, count: 0 };
+      }
+      grouped[cat].amount += t.amount;
+      grouped[cat].count += 1;
+    });
+
+    return Object.entries(grouped)
+      .map(([category, data]) => ({
+        category,
+        ...data,
+        percentage: totalExpense > 0 ? (data.amount / totalExpense) * 100 : 0,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [currentMonthTransactions]);
+
+  // Tendencia mensual (últimos 6 meses)
+  const monthlyTrend = useMemo(() => {
+    const months = [];
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+      const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+
+      const monthTransactions = transactions.filter(t => {
+        const date = t.date instanceof Date ? t.date : new Date(t.date);
+        return date >= startOfMonth && date <= endOfMonth;
+      });
+
+      const monthIncome = monthTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      const monthExpense = monthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      months.push({
+        month: monthDate.toLocaleDateString('es-MX', { month: 'short' }),
+        income: monthIncome,
+        expense: monthExpense,
+        net: monthIncome - monthExpense,
+      });
+    }
+
+    return months;
+  }, [transactions]);
+
+  // Comparación mensual
+  const monthComparison = useMemo(() => {
+    const currentIncome = currentMonthTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const currentExpense = currentMonthTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const lastIncome = lastMonthTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const lastExpense = lastMonthTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const incomeChange = lastIncome > 0 
+      ? ((currentIncome - lastIncome) / lastIncome) * 100 
+      : currentIncome > 0 ? 100 : 0;
+    
+    const expenseChange = lastExpense > 0 
+      ? ((currentExpense - lastExpense) / lastExpense) * 100 
+      : currentExpense > 0 ? 100 : 0;
+
+    return {
+      current: { income: currentIncome, expense: currentExpense },
+      last: { income: lastIncome, expense: lastExpense },
+      change: { income: incomeChange, expense: expenseChange },
+    };
+  }, [currentMonthTransactions, lastMonthTransactions]);
+
+  // Utilización de crédito
+  const creditUtilization = useMemo(() => {
+    return totalLimit > 0 ? (totalDebt / totalLimit) * 100 : 0;
+  }, [totalDebt, totalLimit]);
+
+  // Salud financiera
+  const financialHealth = useMemo(() => {
+    const savingsRate = income > 0 ? ((income - expense) / income) * 100 : 0;
+    const fixedExpenseRatio = income > 0 ? ((subTotals?.monthlyTotal || 0) / income) * 100 : 0;
+    
+    let healthScore = 100;
+    
+    if (savingsRate < 0) healthScore -= 30;
+    else if (savingsRate < 10) healthScore -= 20;
+    else if (savingsRate < 20) healthScore -= 10;
+
+    if (creditUtilization > 70) healthScore -= 25;
+    else if (creditUtilization > 50) healthScore -= 15;
+    else if (creditUtilization > 30) healthScore -= 5;
+
+    if (fixedExpenseRatio > 50) healthScore -= 20;
+    else if (fixedExpenseRatio > 30) healthScore -= 10;
+
+    healthScore = Math.max(0, healthScore);
+
+    const recommendations = [];
+    if (savingsRate < 20) {
+      recommendations.push('Intenta ahorrar al menos 20% de tus ingresos');
+    }
+    if (creditUtilization > 30) {
+      recommendations.push('Reduce el uso de tus tarjetas de crédito');
+    }
+    if (fixedExpenseRatio > 30) {
+      recommendations.push('Revisa tus suscripciones y gastos fijos');
+    }
+
+    return {
+      score: Math.round(healthScore),
+      savingsRate,
+      fixedExpenseRatio,
+      recommendations,
+    };
+  }, [income, expense, subTotals, creditUtilization]);
+
+  // Top gastos
+  const topExpenses = useMemo(() => {
+    return currentMonthTransactions
+      .filter(t => t.type === 'expense')
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+  }, [currentMonthTransactions]);
+
+  // Proyección
+  const projection = useMemo(() => {
+    const now = new Date();
+    const dayOfMonth = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    
+    const avgDailyIncome = income / dayOfMonth;
+    const avgDailyExpense = expense / dayOfMonth;
+    
+    return {
+      projectedIncome: avgDailyIncome * daysInMonth,
+      projectedExpense: avgDailyExpense * daysInMonth,
+      projectedBalance: (avgDailyIncome - avgDailyExpense) * daysInMonth,
+    };
+  }, [income, expense]);
+
+  const getCategoryName = (category) => {
+    const names = {
+      food: 'Comida', transport: 'Transporte', entertainment: 'Entretenimiento',
+      shopping: 'Compras', health: 'Salud', education: 'Educación',
+      bills: 'Servicios', home: 'Hogar', salary: 'Salario',
+      freelance: 'Freelance', investment: 'Inversiones', other: 'Otros',
+    };
+    return names[category] || category;
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      food: 'bg-orange-500', transport: 'bg-blue-500', entertainment: 'bg-purple-500',
+      shopping: 'bg-pink-500', health: 'bg-red-500', education: 'bg-indigo-500',
+      bills: 'bg-yellow-500', home: 'bg-amber-500', salary: 'bg-green-500',
+      freelance: 'bg-cyan-500', investment: 'bg-emerald-500', other: 'bg-gray-500',
+    };
+    return colors[category] || 'bg-gray-500';
+  };
+
+  const getHealthColor = (score) => {
+    if (score >= 85) return 'text-green-500';
+    if (score >= 70) return 'text-blue-500';
+    if (score >= 50) return 'text-yellow-500';
+    return 'text-red-500';
+  };
+
+  const getHealthLabel = (score) => {
+    if (score >= 85) return 'Excelente';
+    if (score >= 70) return 'Buena';
+    if (score >= 50) return 'Regular';
+    return 'Necesita atención';
+  };
+
+  // Si no hay datos
+  if (transactions.length === 0 && cards.length === 0 && subs.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center animate-enter">
+        <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mb-4">
+          <ChartPie className="w-10 h-10 text-muted-foreground" />
+        </div>
+        <h2 className="text-xl font-bold text-foreground mb-2">Sin datos suficientes</h2>
+        <p className="text-muted-foreground max-w-xs">
+          Agrega transacciones, tarjetas o suscripciones para ver tus reportes.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 bg-card">
-      <div className="flex justify-between items-center mb-8">
-        <h3 className="text-xl font-extrabold text-foreground">Nueva Transacción</h3>
-        <button onClick={close} className="w-9 h-9 flex items-center justify-center bg-secondary rounded-full hover:bg-border transition-colors">
-          <X className="w-5 h-5 text-muted-foreground"/>
+    <div className="space-y-6 animate-enter">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Reportes</h1>
+        <p className="text-sm text-muted-foreground">Análisis detallado de tus finanzas</p>
+      </div>
+
+      {/* Salud Financiera */}
+      <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-foreground flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            Salud Financiera
+          </h3>
+          <div className={`text-2xl font-bold ${getHealthColor(financialHealth.score)}`}>
+            {financialHealth.score}/100
+          </div>
+        </div>
+        
+        <div className="mb-4">
+          <div className="h-3 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                financialHealth.score >= 85 ? 'bg-green-500' :
+                financialHealth.score >= 70 ? 'bg-blue-500' :
+                financialHealth.score >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+              }`}
+              style={{ width: `${financialHealth.score}%` }}
+            />
+          </div>
+          <p className={`text-sm mt-2 font-medium ${getHealthColor(financialHealth.score)}`}>
+            {getHealthLabel(financialHealth.score)}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Tasa de ahorro</p>
+            <p className={`text-lg font-bold ${financialHealth.savingsRate >= 20 ? 'text-green-500' : financialHealth.savingsRate >= 0 ? 'text-yellow-500' : 'text-red-500'}`}>
+              {financialHealth.savingsRate.toFixed(1)}%
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Gastos fijos</p>
+            <p className={`text-lg font-bold ${financialHealth.fixedExpenseRatio <= 30 ? 'text-green-500' : financialHealth.fixedExpenseRatio <= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
+              {financialHealth.fixedExpenseRatio.toFixed(1)}%
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Uso de crédito</p>
+            <p className={`text-lg font-bold ${creditUtilization <= 30 ? 'text-green-500' : creditUtilization <= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
+              {creditUtilization.toFixed(1)}%
+            </p>
+          </div>
+        </div>
+
+        {financialHealth.recommendations.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Recomendaciones</p>
+            <div className="space-y-2">
+              {financialHealth.recommendations.map((rec, i) => (
+                <div key={i} className="text-sm p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  {rec}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Comparación mensual */}
+      <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+        <h3 className="font-semibold text-foreground mb-4">Este mes vs. Anterior</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-muted-foreground">Ingresos</span>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                monthComparison.change.income >= 0 
+                  ? 'bg-green-500/10 text-green-500' 
+                  : 'bg-red-500/10 text-red-500'
+              }`}>
+                {monthComparison.change.income >= 0 ? '+' : ''}{monthComparison.change.income.toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-xl font-bold text-foreground">{formatCurrency(monthComparison.current.income)}</p>
+            <p className="text-xs text-muted-foreground">Anterior: {formatCurrency(monthComparison.last.income)}</p>
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-muted-foreground">Gastos</span>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                monthComparison.change.expense <= 0 
+                  ? 'bg-green-500/10 text-green-500' 
+                  : 'bg-red-500/10 text-red-500'
+              }`}>
+                {monthComparison.change.expense >= 0 ? '+' : ''}{monthComparison.change.expense.toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-xl font-bold text-foreground">{formatCurrency(monthComparison.current.expense)}</p>
+            <p className="text-xs text-muted-foreground">Anterior: {formatCurrency(monthComparison.last.expense)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tendencia mensual */}
+      <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+        <h3 className="font-semibold text-foreground mb-4">Últimos 6 meses</h3>
+        
+        <div className="space-y-3">
+          {monthlyTrend.map((month, i) => {
+            const maxValue = Math.max(...monthlyTrend.map(m => Math.max(m.income, m.expense)));
+            const incomeWidth = maxValue > 0 ? (month.income / maxValue) * 100 : 0;
+            const expenseWidth = maxValue > 0 ? (month.expense / maxValue) * 100 : 0;
+            
+            return (
+              <div key={i} className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground capitalize">{month.month}</span>
+                  <span className={`font-medium ${month.net >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {month.net >= 0 ? '+' : ''}{formatCurrency(month.net)}
+                  </span>
+                </div>
+                <div className="flex gap-1 h-2">
+                  <div 
+                    className="bg-green-500 rounded-full transition-all duration-500"
+                    style={{ width: `${incomeWidth}%` }}
+                  />
+                  <div 
+                    className="bg-red-400 rounded-full transition-all duration-500"
+                    style={{ width: `${expenseWidth}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border/50 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 bg-green-500 rounded-full" />
+            <span className="text-muted-foreground">Ingresos</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 bg-red-400 rounded-full" />
+            <span className="text-muted-foreground">Gastos</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Gastos por categoría */}
+      {expensesByCategory.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+          <h3 className="font-semibold text-foreground mb-4">Gastos por Categoría</h3>
+          
+          <div className="space-y-4">
+            {/* Gráfico circular simple */}
+            <div className="flex items-center justify-center py-4">
+              <div className="relative w-32 h-32">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  {expensesByCategory.reduce((acc, cat, i) => {
+                    const prevOffset = acc.offset;
+                    const dashArray = cat.percentage;
+                    const colorClass = getCategoryColor(cat.category).replace('bg-', '');
+                    
+                    acc.elements.push(
+                      <circle
+                        key={cat.category}
+                        className={`stroke-${colorClass}`}
+                        style={{ stroke: `var(--${colorClass}, currentColor)` }}
+                        strokeWidth="4"
+                        strokeDasharray={`${dashArray} ${100 - dashArray}`}
+                        strokeDashoffset={-prevOffset}
+                        strokeLinecap="round"
+                        fill="transparent"
+                        r="16"
+                        cx="18"
+                        cy="18"
+                      />
+                    );
+                    acc.offset += dashArray;
+                    return acc;
+                  }, { elements: [], offset: 0 }).elements}
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-lg font-bold text-foreground">{formatCurrency(expense)}</span>
+                  <span className="text-xs text-muted-foreground">Total</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Lista */}
+            <div className="space-y-3">
+              {expensesByCategory.slice(0, 5).map((cat) => (
+                <div key={cat.category} className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${getCategoryColor(cat.category)}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {getCategoryName(cat.category)}
+                      </span>
+                      <span className="text-sm text-foreground font-medium ml-2">
+                        {formatCurrency(cat.amount)}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full ${getCategoryColor(cat.category)}`}
+                        style={{ width: `${cat.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground w-12 text-right">
+                    {cat.percentage.toFixed(1)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Top gastos */}
+      {topExpenses.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+          <h3 className="font-semibold text-foreground mb-4">Mayores Gastos del Mes</h3>
+          
+          <div className="space-y-3">
+            {topExpenses.map((t, i) => (
+              <div key={t.id} className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground">
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{t.description}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{getCategoryName(t.category)}</p>
+                </div>
+                <span className="text-sm font-semibold text-foreground">
+                  {formatCurrency(t.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Resumen de tarjetas */}
+      {cards.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-primary" />
+            Resumen de Tarjetas
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-secondary/50 rounded-xl p-3">
+              <p className="text-xs text-muted-foreground mb-1">Deuda Total</p>
+              <p className="text-lg font-bold text-foreground">{formatCurrency(totalDebt)}</p>
+            </div>
+            <div className="bg-secondary/50 rounded-xl p-3">
+              <p className="text-xs text-muted-foreground mb-1">Crédito Disponible</p>
+              <p className="text-lg font-bold text-green-500">{formatCurrency(totalLimit - totalDebt)}</p>
+            </div>
+          </div>
+
+          <div className="mb-2">
+            <div className="flex items-center justify-between text-sm mb-1">
+              <span className="text-muted-foreground">Utilización</span>
+              <span className={`font-medium ${
+                creditUtilization <= 30 ? 'text-green-500' : 
+                creditUtilization <= 50 ? 'text-yellow-500' : 'text-red-500'
+              }`}>
+                {creditUtilization.toFixed(1)}%
+              </span>
+            </div>
+            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all ${
+                  creditUtilization <= 30 ? 'bg-green-500' : 
+                  creditUtilization <= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${Math.min(creditUtilization, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resumen de suscripciones */}
+      {subs.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+          <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            Resumen de Suscripciones
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-secondary/50 rounded-xl p-3">
+              <p className="text-xs text-muted-foreground mb-1">Gasto Mensual</p>
+              <p className="text-lg font-bold text-foreground">{formatCurrency(subTotals?.monthlyTotal || 0)}</p>
+            </div>
+            <div className="bg-secondary/50 rounded-xl p-3">
+              <p className="text-xs text-muted-foreground mb-1">Gasto Anual</p>
+              <p className="text-lg font-bold text-foreground">{formatCurrency(subTotals?.annualTotal || 0)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Proyección */}
+      <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+        <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+          <PiggyBank className="w-5 h-5 text-primary" />
+          Proyección del Mes
+        </h3>
+        
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="bg-green-500/10 rounded-xl p-3">
+            <p className="text-xs text-muted-foreground mb-1">Ingresos Est.</p>
+            <p className="text-sm font-bold text-green-500">{formatCurrency(projection.projectedIncome)}</p>
+          </div>
+          <div className="bg-red-500/10 rounded-xl p-3">
+            <p className="text-xs text-muted-foreground mb-1">Gastos Est.</p>
+            <p className="text-sm font-bold text-red-500">{formatCurrency(projection.projectedExpense)}</p>
+          </div>
+          <div className={`rounded-xl p-3 ${projection.projectedBalance >= 0 ? 'bg-blue-500/10' : 'bg-red-500/10'}`}>
+            <p className="text-xs text-muted-foreground mb-1">Balance Est.</p>
+            <p className={`text-sm font-bold ${projection.projectedBalance >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
+              {formatCurrency(projection.projectedBalance)}
+            </p>
+          </div>
+        </div>
+        
+        <p className="text-xs text-muted-foreground text-center mt-3">
+          Basado en tu promedio diario actual
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// MODAL & FORMS
+// ============================================
+
+const Modal = ({ isOpen, onClose, children }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div 
+        className="relative w-full max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden animate-enter"
+        onClick={e => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategories }) => {
+  const [type, setType] = useState('expense');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('other');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const categories = type === 'income' ? incomeCategories : expenseCategories;
+
+  const handleSubmit = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      setError('Ingresa un monto válido');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      await onSubmit(
+        amount,
+        description || (type === 'expense' ? 'Gasto' : 'Ingreso'),
+        type,
+        category
+      );
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-foreground">Nueva Transacción</h2>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex bg-secondary p-1.5 rounded-2xl mb-8 relative">
-        <button 
-          onClick={() => setType('expense')} 
-          className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
-            type === 'expense' 
-              ? 'bg-card text-foreground shadow-sm scale-[1.02]' 
-              : 'text-muted-foreground hover:text-foreground/80'
+      <div className="flex bg-secondary rounded-xl p-1 mb-6">
+        <button
+          onClick={() => { setType('expense'); setCategory('other'); }}
+          className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            type === 'expense' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
           }`}
         >
           Gasto
         </button>
-        <button 
-          onClick={() => setType('income')} 
-          className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
-            type === 'income' 
-              ? 'bg-card text-green-600 shadow-sm scale-[1.02]' 
-              : 'text-muted-foreground hover:text-foreground/80'
+        <button
+          onClick={() => { setType('income'); setCategory('other'); }}
+          className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            type === 'income' ? 'bg-card text-green-500 shadow-sm' : 'text-muted-foreground'
           }`}
         >
           Ingreso
         </button>
       </div>
 
-      <div className="space-y-8">
-        <div className="flex flex-col items-center justify-center py-4 relative group">
-          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 opacity-50 group-focus-within:opacity-100 transition-opacity">
-            Monto
-          </label>
-          <div className="flex items-baseline justify-center">
-            <span className={`text-4xl font-bold mr-1 transition-colors ${!amount ? 'text-border' : type === 'expense' ? 'text-foreground' : 'text-green-600'}`}>$</span>
-            <input 
-              type="number" 
-              autoFocus 
-              placeholder="0" 
-              className="w-full max-w-[200px] text-center text-7xl font-extrabold bg-transparent outline-none placeholder-border text-foreground caret-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-0 m-0 leading-none"
-              value={amount} 
-              onChange={e => setAmount(e.target.value)} 
+      <div className="text-center mb-6">
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monto</label>
+        <div className="flex items-baseline justify-center mt-2">
+          <span className={`text-3xl font-bold mr-1 ${amount ? (type === 'income' ? 'text-green-500' : 'text-foreground') : 'text-muted-foreground/30'}`}>$</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="0"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            className="text-5xl font-bold bg-transparent outline-none text-center max-w-[200px] text-foreground placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            autoFocus
+          />
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Descripción (opcional)"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-2">Categoría</label>
+        <div className="flex flex-wrap gap-2">
+          {categories.slice(0, 6).map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setCategory(cat.id)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                category === cat.id 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-secondary text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm mb-4">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <button
+        onClick={handleSubmit}
+        disabled={!amount || isSubmitting}
+        className={`w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
+          !amount 
+            ? 'bg-secondary text-muted-foreground cursor-not-allowed'
+            : type === 'income'
+              ? 'bg-green-500 text-white hover:bg-green-600'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+        }`}
+      >
+        {isSubmitting ? (
+          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        ) : (
+          <>
+            <Check className="w-5 h-5" />
+            Guardar {type === 'income' ? 'Ingreso' : 'Gasto'}
+          </>
+        )}
+      </button>
+    </div>
+  );
+};
+
+const CardForm = ({ onClose, onSubmit, gradients }) => {
+  const [name, setName] = useState('');
+  const [limit, setLimit] = useState('');
+  const [debt, setDebt] = useState('');
+  const [cutoffDay, setCutoffDay] = useState('');
+  const [paymentDay, setPaymentDay] = useState('');
+  const [selectedGradient, setSelectedGradient] = useState(gradients?.[0]?.value || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      setError('El nombre es requerido');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      await onSubmit(name, limit, cutoffDay, paymentDay, debt, selectedGradient);
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-foreground">Nueva Tarjeta</h2>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Nombre (ej. Nu, BBVA)"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+        />
+
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Límite"
+            value={limit}
+            onChange={e => setLimit(e.target.value)}
+            className="h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          />
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Deuda actual"
+            value={debt}
+            onChange={e => setDebt(e.target.value)}
+            className="h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1.5 ml-1">Día de corte</label>
+            <input
+              type="number"
+              inputMode="numeric"
+              placeholder="1-31"
+              min="1"
+              max="31"
+              value={cutoffDay}
+              onChange={e => setCutoffDay(e.target.value)}
+              className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1.5 ml-1">Día de pago</label>
+            <input
+              type="number"
+              inputMode="numeric"
+              placeholder="1-31"
+              min="1"
+              max="31"
+              value={paymentDay}
+              onChange={e => setPaymentDay(e.target.value)}
+              className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
-        <div className="bg-secondary rounded-2xl px-5 py-4 flex items-center gap-4 border border-transparent focus-within:border-border focus-within:bg-card transition-all">
-          <div className={`p-2.5 rounded-full ${type === 'expense' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-            {type === 'expense' ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
-          </div>
-          <div className="flex-1">
-             <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-0.5">Concepto</label>
-             <input 
-               type="text" 
-               placeholder="Ej. Supermercado, Uber..." 
-               className="w-full bg-transparent font-bold text-lg outline-none text-foreground placeholder-muted-foreground"
-               value={desc} 
-               onChange={e => setDesc(e.target.value)} 
-             />
+
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-2">Color</label>
+          <div className="flex gap-2 flex-wrap">
+            {(gradients || []).map(g => (
+              <button
+                key={g.id}
+                onClick={() => setSelectedGradient(g.value)}
+                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${g.value} transition-all ${
+                  selectedGradient === g.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' : ''
+                }`}
+              />
+            ))}
           </div>
         </div>
 
-        <button 
-          onClick={() => { if(amount) { add(amount, desc || (type === 'expense' ? 'Gasto General' : 'Ingreso Extra'), type, 'General'); close(); } }} 
-          disabled={!amount} 
-          className={`w-full py-4 rounded-2xl font-bold text-lg text-background shadow-xl flex justify-center items-center gap-2 active:scale-95 transition-all duration-300 ${
-            !amount ? 'bg-secondary text-muted-foreground cursor-not-allowed shadow-none' : type === 'expense' ? 'bg-foreground shadow-gray-400/30 dark:shadow-black/30' : 'bg-green-600 text-white shadow-green-200 dark:shadow-green-900/50'
-          }`}
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <button
+          onClick={handleSubmit}
+          disabled={!name.trim() || isSubmitting}
+          className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          {amount ? `Guardar ${type === 'expense' ? 'Gasto' : 'Ingreso'}` : 'Ingresa un monto'}
+          {isSubmitting ? (
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <Check className="w-5 h-5" />
+              Crear Tarjeta
+            </>
+          )}
         </button>
       </div>
     </div>
   );
 };
 
-const CardForm = ({ close, add }) => {
-  const [f, setF] = useState({ name: '', limit: '', debt: '', cut: '', pay: '' });
-  const inputClass = "w-full bg-secondary border-0 rounded-2xl px-5 py-4 text-base font-medium outline-none transition-all focus:bg-card focus:ring-2 focus:ring-primary/20 focus:shadow-lg";
+const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [paymentDay, setPaymentDay] = useState('');
+  const [category, setCategory] = useState('streaming');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      setError('El nombre es requerido');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      await onSubmit(name, amount, paymentDay, category);
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const displayCategories = (categories || []).slice(0, 6);
+
   return (
-    <div className="p-8 bg-card">
-      <div className="flex justify-between items-center mb-6"><h3 className="text-xl font-extrabold text-foreground">Nueva Tarjeta</h3><button onClick={close} className="w-9 h-9 flex items-center justify-center bg-secondary rounded-full hover:bg-border"><X className="w-5 h-5 text-muted-foreground"/></button></div>
-      <div className="space-y-4"><input className={inputClass} placeholder="Nombre (Ej. Nu, BBVA)" value={f.name} onChange={e => setF({...f, name: e.target.value})} /><div className="grid grid-cols-2 gap-4"><input type="number" className={inputClass} placeholder="Límite Total" value={f.limit} onChange={e => setF({...f, limit: e.target.value})} /><input type="number" className={inputClass} placeholder="Deuda Actual" value={f.debt} onChange={e => setF({...f, debt: e.target.value})} /></div><div className="grid grid-cols-2 gap-4"><div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-2">Día Corte</label><input type="number" className={inputClass} placeholder="Ej. 15" value={f.cut} onChange={e => setF({...f, cut: e.target.value})} /></div><div className="space-y-1"><label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider ml-2">Día Pago</label><input type="number" className={inputClass} placeholder="Ej. 5" value={f.pay} onChange={e => setF({...f, pay: e.target.value})} /></div></div><button onClick={() => { if(f.name) { add(f.name, f.limit, f.cut, f.pay, f.debt); close(); } }} className="w-full py-4 mt-4 bg-primary text-primary-foreground font-bold rounded-2xl shadow-lg active:scale-95 transition-all">Crear Tarjeta</button></div>
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-foreground">Nueva Suscripción</h2>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-2">Categoría</label>
+          <div className="flex flex-wrap gap-2">
+            {displayCategories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setCategory(cat.id)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  category === cat.id 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <input
+          type="text"
+          placeholder="Nombre (ej. Netflix, Spotify)"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+        />
+
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="number"
+            inputMode="decimal"
+            placeholder="Monto"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            className="h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          />
+          <input
+            type="number"
+            inputMode="numeric"
+            placeholder="Día de pago (1-31)"
+            min="1"
+            max="31"
+            value={paymentDay}
+            onChange={e => setPaymentDay(e.target.value)}
+            className="h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <button
+          onClick={handleSubmit}
+          disabled={!name.trim() || isSubmitting}
+          className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          {isSubmitting ? (
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <Check className="w-5 h-5" />
+              Crear Suscripción
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 };
 
-const SubForm = ({ close, add }) => {
-  const [f, setF] = useState({ name: '', amount: '', day: '', cat: 'service' });
-  const inputClass = "w-full bg-secondary border-0 rounded-2xl px-5 py-4 text-base font-medium outline-none transition-all focus:bg-card focus:ring-2 focus:ring-primary/20 focus:shadow-lg";
-  return (
-    <div className="p-8 bg-card">
-      <div className="flex justify-between items-center mb-6"><h3 className="text-xl font-extrabold text-foreground">Pago Fijo</h3><button onClick={close} className="w-9 h-9 flex items-center justify-center bg-secondary rounded-full hover:bg-border"><X className="w-5 h-5 text-muted-foreground"/></button></div>
-      <div className="flex justify-center gap-6 mb-8">{[{id:'home', icon:HomeIcon, color:'text-orange-600', bg:'bg-orange-100', darkBg:'dark:bg-orange-500/10'}, {id:'entertainment', icon:Tv, color:'text-purple-600', bg:'bg-purple-100', darkBg:'dark:bg-purple-500/10'}, {id:'service', icon:Zap, color:'text-blue-600', bg:'bg-blue-100', darkBg:'dark:bg-blue-500/10'}].map(c => (<button key={c.id} onClick={() => setF({...f, cat: c.id})} className={`p-4 rounded-2xl transition-all ${f.cat === c.id ? `${c.bg} ${c.darkBg} ring-4 ring-border/50 scale-110` : 'bg-secondary hover:bg-border'}`}><c.icon className={`w-6 h-6 ${f.cat === c.id ? c.color : 'text-muted-foreground'}`} /></button>))}</div>
-      <div className="space-y-4"><input className={inputClass} placeholder="Nombre (Ej. Netflix)" value={f.name} onChange={e => setF({...f, name: e.target.value})} /><div className="grid grid-cols-2 gap-4"><input type="number" className={inputClass} placeholder="Monto" value={f.amount} onChange={e => setF({...f, amount: e.target.value})} /><input type="number" max="31" className={inputClass} placeholder="Día (1-31)" value={f.day} onChange={e => setF({...f, day: e.target.value})} /></div><button onClick={() => { if(f.name) { add(f.name, f.amount, f.day, f.cat); close(); } }} className="w-full py-4 mt-4 bg-foreground text-background font-bold rounded-2xl shadow-lg active:scale-95 transition-all">Programar</button></div>
-    </div>
-  );
-};
-
+// ============================================
+// SKELETON
+// ============================================
 
 const DashboardSkeleton = () => (
-  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-pulse">
-    <div className="lg:col-span-8 space-y-8">
-      {/* Balance Card Skeleton */}
-      <div className="rounded-[2.5rem] bg-secondary p-8 md:p-10 h-[216px]">
-        <div className="h-4 bg-muted rounded-full w-1/4 mb-4"></div>
-        <div className="h-12 bg-muted rounded-lg w-1/2 mb-4"></div>
-        <div className="h-6 bg-muted rounded-full w-1/3"></div>
-      </div>
-      {/* Cards Skeleton */}
-      <div className="bg-card rounded-[2.5rem] p-8 border border-border/50">
-        <div className="flex justify-between items-center mb-6">
-          <div className="h-6 bg-muted rounded-full w-1/3"></div>
-          <div className="h-8 bg-muted rounded-lg w-20"></div>
-        </div>
-        <div className="relative h-44 flex items-center">
-          <div className="absolute w-full max-w-sm h-40 rounded-3xl bg-secondary"></div>
-          <div className="absolute w-full max-w-sm h-40 rounded-3xl bg-muted right-0"></div>
-        </div>
+  <div className="space-y-6 animate-pulse">
+    <div className="rounded-2xl sm:rounded-3xl bg-secondary p-5 sm:p-6 h-48" />
+    
+    <div className="grid grid-cols-3 gap-3">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="h-20 bg-secondary rounded-2xl" />
+      ))}
+    </div>
+    
+    <div>
+      <div className="h-6 bg-secondary rounded w-1/3 mb-3" />
+      <div className="flex gap-4">
+        <div className="w-64 h-36 bg-secondary rounded-2xl flex-shrink-0" />
+        <div className="w-64 h-36 bg-secondary rounded-2xl flex-shrink-0" />
       </div>
     </div>
-    <div className="lg:col-span-4 space-y-8">
-      {/* Subscriptions Skeleton */}
-      <div className="bg-card rounded-[2.5rem] p-8 border border-border/50 h-fit">
-        <div className="flex justify-between items-center mb-6">
-          <div className="h-6 bg-muted rounded-full w-2/3"></div>
-          <div className="w-9 h-9 bg-muted rounded-full"></div>
-        </div>
-        <div className="space-y-5">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-secondary"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded-full w-24"></div>
-                  <div className="h-3 bg-muted rounded-full w-16"></div>
-                </div>
-              </div>
-              <div className="h-5 bg-muted rounded-full w-12"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* History Skeleton */}
-      <div>
-        <div className="h-6 bg-muted rounded-full w-1/3 mb-5 px-1"></div>
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-card p-5 rounded-3xl flex justify-between items-center border border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-secondary"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded-full w-32"></div>
-                  <div className="h-3 bg-muted rounded-full w-20"></div>
-                </div>
-              </div>
-              <div className="h-5 bg-muted rounded-full w-16"></div>
-            </div>
-          ))}
-        </div>
+    
+    <div>
+      <div className="h-6 bg-secondary rounded w-1/2 mb-3" />
+      <div className="space-y-2">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-16 bg-secondary rounded-xl" />
+        ))}
       </div>
     </div>
   </div>
 );
-
-    
