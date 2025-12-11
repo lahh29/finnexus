@@ -196,22 +196,22 @@ const OverviewView = ({ data, actions, fmt }) => (
         <div className="absolute top-[-50%] right-[-30%] w-[800px] h-[800px] bg-blue-600/20 blur-[150px] rounded-full pointer-events-none opacity-60"></div>
         <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-8">
           <div className="flex-1">
-            <div className="text-blue-300 font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+            <div className="text-blue-300 dark:text-blue-300 text-opacity-80 font-bold text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div> Balance Total
             </div>
             <h2 className="text-5xl md:text-6xl font-bold tracking-tighter mb-4 text-background">{fmt(data.balance)}</h2>
-            <div className="inline-flex items-center gap-2 text-gray-300 text-xs font-semibold bg-white/5 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 text-gray-300 dark:text-gray-300 text-opacity-80 text-xs font-semibold bg-white/5 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
               <Zap className="w-3.5 h-3.5 text-yellow-400" />
               <span>{fmt(data.totalFixed)} en gastos fijos</span>
             </div>
           </div>
           <div className="w-full md:w-auto flex-shrink-0 flex md:flex-col gap-4">
              <div className="flex-1 bg-white/5 p-5 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/10 transition-colors">
-                <p className="text-[10px] text-gray-300 uppercase font-bold tracking-wide mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-green-400"/>Ingresos</p>
+                <p className="text-[10px] text-gray-300 dark:text-gray-300 text-opacity-80 uppercase font-bold tracking-wide mb-1 flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5 text-green-400"/>Ingresos</p>
                 <p className="text-2xl font-semibold text-background">{fmt(data.income)}</p>
              </div>
              <div className="flex-1 bg-white/5 p-5 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/10 transition-colors">
-                <p className="text-[10px] text-gray-300 uppercase font-bold tracking-wide mb-1 flex items-center gap-1.5"><TrendingDown className="w-3.5 h-3.5 text-red-400"/>Gastos</p>
+                <p className="text-[10px] text-gray-300 dark:text-gray-300 text-opacity-80 uppercase font-bold tracking-wide mb-1 flex items-center gap-1.5"><TrendingDown className="w-3.5 h-3.5 text-red-400"/>Gastos</p>
                 <p className="text-2xl font-semibold text-background">{fmt(data.expense)}</p>
              </div>
           </div>
