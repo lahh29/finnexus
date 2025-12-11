@@ -1,29 +1,35 @@
 // src/app/layout.js
+
 import { Inter } from 'next/font/google';
-import { FirebaseProvider } from '../firebase/provider';
-import { ThemeProvider } from '../components/theme-provider';
 import './globals.css';
+import { ThemeProvider } from '../components/theme-provider';
+import { FirebaseProvider } from '../firebase/provider';
 
-const inter = Inter({ 
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-});
+const inter = Inter({ subsets: ['latin'] });
 
-export const metadata = {
-  title: 'FinNexus - Gestión Financiera Inteligente',
-  description: 'Administra tus finanzas personales, tarjetas de crédito y suscripciones de forma inteligente.',
-  keywords: ['finanzas', 'presupuesto', 'tarjetas', 'suscripciones', 'gastos'],
-  authors: [{ name: 'FinNexus' }],
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
   ],
+};
+
+export const metadata = {
+  title: 'FinNexus - Control de Finanzas',
+  description: 'Gestiona tus finanzas personales de forma inteligente',
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'FinNexus',
+  },
+  icons: {
+    icon: '/icon-192x192.png',
+    apple: '/apple-touch-icon.png',
   },
 };
 
@@ -33,14 +39,18 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          <FirebaseProvider>
+      <body className={`${inter.className} antialiased`}>
+        <FirebaseProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             {children}
-          </FirebaseProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </FirebaseProvider>
       </body>
     </html>
   );
