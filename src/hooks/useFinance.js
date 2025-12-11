@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
+import { useFirestore } from '../firebase/provider';
 import { 
   collection, 
   addDoc, 
@@ -12,10 +12,11 @@ import {
   doc,
   serverTimestamp 
 } from 'firebase/firestore';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../firebase/auth';
 
 export function useFinance() {
   const { user } = useAuth();
+  const { db } = useFirestore();
   const [transactions, setTransactions] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   
@@ -25,7 +26,7 @@ export function useFinance() {
   const [expense, setExpense] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !db) return;
 
     // Referencia a la colección: users -> UID -> transactions
     const q = query(
@@ -46,7 +47,7 @@ export function useFinance() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, db]);
 
   const calculateTotals = (data) => {
     let inc = 0;

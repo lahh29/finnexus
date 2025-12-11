@@ -1,18 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
+import { useFirestore } from '../firebase/provider';
 import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../firebase/auth';
 
 export function useSubscriptions() {
   const { user } = useAuth();
+  const { db } = useFirestore();
   const [subs, setSubs] = useState([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [totalFixed, setTotalFixed] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !db) return;
 
     const q = query(collection(db, "users", user.uid, "subscriptions"));
 
@@ -37,7 +38,7 @@ export function useSubscriptions() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, db]);
 
   // Lógica inteligente de fechas
   const calculateNextPayment = (day) => {

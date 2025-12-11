@@ -1,7 +1,3 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-
 const firebaseConfig = {
   // --- PEGAR AQUI TU CONFIGURACIÓN DE FIREBASE ---
   apiKey: "AIzaSyClWupa5JpJCXbQDJz-BwReK9h14sYEQ_k",
@@ -13,9 +9,4 @@ const firebaseConfig = {
   // -----------------------------------------------
 };
 
-// Singleton para evitar errores de doble inicialización en Next.js
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-export { auth, db };
+export { firebaseConfig };

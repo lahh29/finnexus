@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
+import { useFirestore } from '../firebase/provider';
 import { collection, addDoc, query, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../firebase/auth';
 
 export function useCards() {
   const { user } = useAuth();
+  const { db } = useFirestore();
   const [cards, setCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !db) return;
 
     const q = query(collection(db, "users", user.uid, "credit_cards"));
 
@@ -29,7 +30,7 @@ export function useCards() {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, db]);
 
   // Lógica para calcular fechas
   const calculateStatus = (cutoffDay, paymentDay) => {

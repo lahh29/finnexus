@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../firebase/auth';
 import { useFinance } from '../hooks/useFinance';
 import { useCards } from '../hooks/useCards';
 import { useSubscriptions } from '../hooks/useSubscriptions';

@@ -1,0 +1,130 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "A user of the application.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's name."
+        }
+      },
+      "required": ["uid", "email"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "A financial transaction.",
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "description": "The amount of the transaction."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the transaction."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["income", "expense"],
+          "description": "The type of the transaction."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the transaction."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date of the transaction."
+        }
+      },
+      "required": ["amount", "description", "type", "category", "date"]
+    },
+    "credit_card": {
+        "title": "Credit Card",
+        "description": "A credit card.",
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "limit": {
+                "type": "number"
+            },
+            "cutoffDay": {
+                "type": "number"
+            },
+            "paymentDay": {
+                "type": "number"
+            },
+            "currentDebt": {
+                "type": "number"
+            },
+            "bgGradient": {
+                "type": "string"
+            }
+        },
+        "required": ["name", "limit", "cutoffDay", "paymentDay", "currentDebt"]
+    },
+    "subscription": {
+        "title": "Subscription",
+        "description": "A subscription.",
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "amount": {
+                "type": "number"
+            },
+            "paymentDay": {
+                "type": "number"
+            },
+            "category": {
+                "type": "string"
+            }
+        },
+        "required": ["name", "amount", "paymentDay", "category"]
+    }
+  },
+  "auth": {
+    "providers": ["email"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/user"
+      },
+      "description": "User profile information."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/entities/transaction"
+      },
+      "description": "Financial transactions for a user."
+    },
+    "/users/{userId}/credit_cards/{credit_card_id}": {
+        "schema": {
+            "$ref": "#/entities/credit_card"
+        },
+        "description": "Credit cards for a user."
+    },
+    "/users/{userId}/subscriptions/{subscription_id}": {
+        "schema": {
+            "$ref": "#/entities/subscription"
+        },
+        "description": "Subscriptions for a user."
+    }
+  }
+}

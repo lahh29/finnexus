@@ -1,4 +1,4 @@
-import { AuthProvider } from "../context/AuthContext";
+import { FirebaseProvider } from "../firebase/provider";
 import "./globals.css";
 
 export const metadata = {
@@ -11,9 +11,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body>
-        <AuthProvider>
+        <FirebaseProvider>
           {children}
-        </AuthProvider>
+        </FirebaseProvider>
       </body>
     </html>
   );
