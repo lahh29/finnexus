@@ -339,7 +339,7 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
 );
 
 const MobileNavItem = ({ icon, active, onClick }) => (
-  <button onClick={onClick} className={`p-4 rounded-2xl transition-all ${active ? 'bg-white/10 text-white' : 'text-gray-500'}`}>{icon}</button>
+  <button onClick={onClick} className={`p-4 rounded-2xl transition-all ${active ? 'bg-white/10 text-white' : 'text-gray-500'}`}></button>
 );
 
 const CardItem = ({ card, formatCurrency, deleteCard, inStack = false }) => {
@@ -476,7 +476,7 @@ const TransactionForm = ({ close, add }) => {
           onClick={() => { if(amount) { add(amount, desc || (type === 'expense' ? 'Gasto General' : 'Ingreso Extra'), type, 'General'); close(); } }} 
           disabled={!amount} 
           className={`w-full py-4 rounded-2xl font-bold text-lg text-background shadow-xl flex justify-center items-center gap-2 active:scale-95 transition-all duration-300 ${
-            !amount ? 'bg-secondary text-muted-foreground cursor-not-allowed shadow-none' : type === 'expense' ? 'bg-foreground shadow-gray-400/30 dark:shadow-black/30' : 'bg-green-600 text-white shadow-green-200'
+            !amount ? 'bg-secondary text-muted-foreground cursor-not-allowed shadow-none' : type === 'expense' ? 'bg-foreground shadow-gray-400/30 dark:shadow-black/30' : 'bg-green-600 text-white shadow-green-200 dark:shadow-green-900/50'
           }`}
         >
           {amount ? `Guardar ${type === 'expense' ? 'Gasto' : 'Ingreso'}` : 'Ingresa un monto'}
@@ -574,4 +574,3 @@ const DashboardSkeleton = () => (
     </div>
   </div>
 );
-
