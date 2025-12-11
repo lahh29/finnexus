@@ -330,20 +330,58 @@ const MobileNavItem = ({ icon, active, onClick }) => (
   <button onClick={onClick} className={`p-4 rounded-2xl transition-all ${active ? 'bg-white/10 text-white' : 'text-gray-500'}`}>{icon}</button>
 );
 
-const CardItem = ({ card, formatCurrency, deleteCard }) => (
-  <div className={`h-56 rounded-[2.5rem] p-7 text-white shadow-xl relative flex flex-col justify-between bg-gradient-to-br ${card.bgGradient} group transition-all hover:-translate-y-2 hover:shadow-2xl overflow-hidden`}>
+const CardItem = ({ card, formatCurrency, deleteCard }) => {
+  const gradients = {
+    'from-blue-500 to-blue-700': 'linear-gradient(to bottom right, #3b82f6, #1d4ed8)',
+    'from-purple-500 to-indigo-600': 'linear-gradient(to bottom right, #a855f7, #4f46e5)',
+    'from-slate-700 to-black': 'linear-gradient(to bottom right, #334155, #000000)',
+    'from-rose-400 to-orange-400': 'linear-gradient(to bottom right, #fb7185, #fb923c)',
+    'from-emerald-500 to-teal-700': 'linear-gradient(to bottom right, #10b981, #0d9488)',
+  };
+  const bgStyle = {
+    backgroundImage: gradients[card.bgGradient] || 'linear-gradient(to bottom right, #6b7280, #1f2937)',
+  };
+
+  return (
+    <div
+      style={bgStyle}
+      className="h-56 rounded-[2.5rem] p-7 text-white shadow-xl relative flex flex-col justify-between group transition-all hover:-translate-y-2 hover:shadow-2xl overflow-hidden"
+    >
       <div className="relative z-10 flex justify-between items-start">
-        <div><p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1">Banco</p><h4 className="font-bold text-2xl tracking-tight">{card.name}</h4></div>
+        <div>
+          <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1">Banco</p>
+          <h4 className="font-bold text-2xl tracking-tight">{card.name}</h4>
+        </div>
         <CreditCard className="w-8 h-8 opacity-50" />
       </div>
       <div className="relative z-10 space-y-4">
-        <div className="flex justify-between text-xs font-bold opacity-90"><span>{formatCurrency(card.currentDebt)}</span><span>{Math.round((card.currentDebt/card.limit)*100)}%</span></div>
-        <div className="w-full h-2.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-1000 ease-out ${ (card.currentDebt / card.limit) > 0.8 ? 'bg-[#FF453A]' : 'bg-white' }`} style={{ width: `${Math.min((card.currentDebt / card.limit) * 100, 100)}%` }}></div></div>
-        <div className="flex justify-between items-end"><p className="text-[10px] font-semibold bg-black/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/10">Corte: Día {card.cutoffDay} ({card.daysToCutoff} días)</p><button onClick={(e) => { e.stopPropagation(); deleteCard(card.id); }} className="bg-white/20 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button></div>
+        <div className="flex justify-between text-xs font-bold opacity-90">
+          <span>{formatCurrency(card.currentDebt)}</span>
+          <span>{Math.round((card.currentDebt / card.limit) * 100)}%</span>
+        </div>
+        <div className="w-full h-2.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm">
+          <div
+            className={`h-full rounded-full transition-all duration-1000 ease-out ${(card.currentDebt / card.limit) > 0.8 ? 'bg-[#FF453A]' : 'bg-white'}`}
+            style={{ width: `${Math.min((card.currentDebt / card.limit) * 100, 100)}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between items-end">
+          <p className="text-[10px] font-semibold bg-black/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/10">
+            Corte: Día {card.cutoffDay} ({card.daysToCutoff} días)
+          </p>
+          <button
+            onClick={(e) => { e.stopPropagation(); deleteCard(card.id); }}
+            className="bg-white/20 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none"></div>
-  </div>
-);
+    </div>
+  );
+};
+
 
 // --- MODALES (NUEVO DISEÑO PREMIUM) ---
 
