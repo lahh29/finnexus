@@ -383,7 +383,7 @@ const CardItem = ({ card, formatCurrency, deleteCard }) => {
 
 // --- MODALES (NUEVO DISEÑO PREMIUM) ---
 
-// 1. Transaction Form Rediseñado (Sin bordes, texto gigante, estilo Apple)
+// 1. Transaction Form Rediseñado
 const TransactionForm = ({ close, add }) => {
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
@@ -436,7 +436,7 @@ const TransactionForm = ({ close, add }) => {
               type="number" 
               autoFocus 
               placeholder="0" 
-              className="w-full max-w-[200px] text-center text-7xl font-extrabold bg-transparent outline-none placeholder-gray-100 text-[#1D1D1F] caret-[#007AFF] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-0 m-0 leading-none" 
+              className="w-full max-w-[200px] text-center text-7xl font-extrabold bg-transparent outline-none placeholder-gray-200 text-[#1D1D1F] caret-[#007AFF] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none p-0 m-0 leading-none"
               value={amount} 
               onChange={e => setAmount(e.target.value)} 
             />
@@ -453,7 +453,7 @@ const TransactionForm = ({ close, add }) => {
              <input 
                type="text" 
                placeholder="Ej. Supermercado, Uber..." 
-               className="w-full bg-transparent font-bold text-lg outline-none text-[#1D1D1F] placeholder-gray-300" 
+               className="w-full bg-transparent font-bold text-lg outline-none text-[#1D1D1F] placeholder-gray-400"
                value={desc} 
                onChange={e => setDesc(e.target.value)} 
              />
@@ -465,7 +465,7 @@ const TransactionForm = ({ close, add }) => {
           onClick={() => { if(amount) { add(amount, desc || (type === 'expense' ? 'Gasto General' : 'Ingreso Extra'), type, 'General'); close(); } }} 
           disabled={!amount} 
           className={`w-full py-4 rounded-2xl font-bold text-lg text-white shadow-xl flex justify-center items-center gap-2 active:scale-95 transition-all duration-300 ${
-            !amount ? 'bg-gray-200 cursor-not-allowed shadow-none' : type === 'expense' ? 'bg-[#1D1D1F] shadow-gray-300' : 'bg-green-600 shadow-green-200'
+            !amount ? 'bg-gray-300 cursor-not-allowed shadow-none' : type === 'expense' ? 'bg-[#1D1D1F] shadow-gray-300' : 'bg-green-600 shadow-green-200'
           }`}
         >
           {amount ? `Guardar ${type === 'expense' ? 'Gasto' : 'Ingreso'}` : 'Ingresa un monto'}
