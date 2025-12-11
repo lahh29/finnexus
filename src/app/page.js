@@ -148,12 +148,17 @@ function Dashboard({ user, logout }) {
             <SidebarItem icon={<PieChart />} label="Reportes" active={currentView === 'stats'} onClick={() => setCurrentView('stats')} />
           </nav>
         </div>
-        <div className="bg-[#F5F7FA] rounded-3xl p-4 border border-gray-100">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#1D1D1F] font-bold border border-gray-100">{user.displayName ? user.displayName[0] : 'U'}</div>
-            <div className="flex-1 overflow-hidden"><p className="text-sm font-bold truncate">{user.displayName}</p><p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Cuenta Pro</p></div>
+        <div className="group relative px-2 py-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-gray-100 shadow-sm flex items-center justify-center text-[#1D1D1F] font-bold border border-gray-200">{user.displayName ? user.displayName[0] : 'U'}</div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-bold truncate text-[#1D1D1F]">{user.displayName}</p>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Cuenta Pro</p>
+            </div>
+            <button onClick={logout} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all duration-300">
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
-          <button onClick={logout} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold text-red-500 hover:bg-white hover:shadow-sm rounded-xl transition-all"><LogOut className="w-3.5 h-3.5" /> Cerrar Sesión</button>
         </div>
       </aside>
 
