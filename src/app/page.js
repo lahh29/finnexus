@@ -169,7 +169,7 @@ function Dashboard({ user }) {
         {renderContent()}
       </main>
 
-      <div className="md:hidden fixed bottom-6 left-6 right-6 bg-foreground/90 backdrop-blur-xl rounded-[2rem] p-2 flex justify-between items-center z-40 shadow-2xl shadow-black/20 text-gray-400">
+      <div className="md:hidden fixed bottom-6 left-6 right-6 bg-foreground/90 backdrop-blur-xl rounded-[2rem] p-2 flex justify-around items-center z-40 shadow-2xl shadow-black/20 text-gray-400">
         <MobileNavItem icon={<LayoutGrid />} active={currentView === 'overview'} onClick={() => setCurrentView('overview')} />
         <button onClick={() => setActiveModal('transaction')} className="w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center -mt-8 border-4 border-background active:scale-95 transition-transform"><Plus className="w-6 h-6" /></button>
         <MobileNavItem icon={<CreditCard />} active={currentView === 'cards'} onClick={() => setCurrentView('cards')} />
@@ -192,7 +192,7 @@ function Dashboard({ user }) {
 const OverviewView = ({ data, actions, fmt }) => (
   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-enter">
     <div className="lg:col-span-8 space-y-8">
-      <div className="rounded-[2.5rem] bg-foreground text-background p-8 md:p-10 relative overflow-hidden shadow-2xl group ring-1 ring-white/10 dark:ring-white/5">
+      <div className="rounded-[2.5rem] bg-foreground text-background p-8 md:p-10 relative overflow-hidden shadow-2xl group ring-1 ring-black/10 dark:ring-white/5">
         <div className="absolute top-[-50%] right-[-30%] w-[800px] h-[800px] bg-blue-600/20 blur-[150px] rounded-full pointer-events-none opacity-60"></div>
         <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-8">
           <div className="flex-1">
@@ -339,7 +339,9 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
 );
 
 const MobileNavItem = ({ icon, active, onClick }) => (
-  <button onClick={onClick} className={`p-4 rounded-2xl transition-all ${active ? 'bg-white/10 text-white' : 'text-gray-500'}`}></button>
+  <button onClick={onClick} className={`p-4 rounded-2xl transition-all ${active ? 'bg-primary/80 text-primary-foreground' : 'text-gray-500'}`}>
+    {icon}
+  </button>
 );
 
 const CardItem = ({ card, formatCurrency, deleteCard, inStack = false }) => {
@@ -574,3 +576,5 @@ const DashboardSkeleton = () => (
     </div>
   </div>
 );
+
+    
