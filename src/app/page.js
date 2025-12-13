@@ -12,7 +12,7 @@ import {
   Wallet, Calendar, LayoutGrid, ChartPie, LogOut, 
   ArrowRight, User, Moon, Sun, ChevronRight, Bell,
   Sparkles, CircleDollarSign, Receipt, Eye, EyeOff,
-  Check, AlertCircle, Target, PiggyBank, Settings, CheckCircle
+  Check, AlertCircle, Target, PiggyBank, Settings, CheckCircle, PartyPopper
 } from 'lucide-react';
 
 // ============================================
@@ -367,6 +367,22 @@ function Dashboard({ user }) {
   const [activeModal, setActiveModal] = useState(null);
   const [currentView, setCurrentView] = useState('overview');
   const [showBalance, setShowBalance] = useState(true);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  useEffect(() => {
+    // Check if the user has seen the update notification
+    const hasSeenUpdate = localStorage.getItem('hasSeenCurrencyUpdate');
+    if (!hasSeenUpdate) {
+      setShowUpdateModal(true);
+    }
+  }, []);
+
+  const handleCloseUpdateModal = (dontShowAgain) => {
+    if (dontShowAgain) {
+      localStorage.setItem('hasSeenCurrencyUpdate', 'true');
+    }
+    setShowUpdateModal(false);
+  };
 
   const isLoading = loadingData || loadingCards || loadingSubs || !mounted;
 
@@ -553,6 +569,10 @@ function Dashboard({ user }) {
           onSubmit={addSubscription}
           categories={subCategories}
         />
+      </Modal>
+      
+      <Modal isOpen={showUpdateModal} onClose={() => handleCloseUpdateModal(false)}>
+        <UpdateNotificationModal onClose={handleCloseUpdateModal} />
       </Modal>
     </div>
   );
@@ -2246,6 +2266,44 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
             </>
           )}
         </button>
+      </div>
+    </div>
+  );
+};
+
+const UpdateNotificationModal = ({ onClose }) => {
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  return (
+    <div className="p-6 text-center">
+      <div className="flex justify-center mb-4">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+          <PartyPopper className="w-8 h-8 text-primary" />
+        </div>
+      </div>
+      <h2 className="text-xl font-bold text-foreground mb-2">¡Nueva función disponible!</h2>
+      <p className="text-muted-foreground mb-6">
+        Ahora puedes seleccionar tu moneda local desde el menú de configuración.
+      </p>
+
+      <button
+        onClick={() => onClose(dontShowAgain)}
+        className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all"
+      >
+        ¡Entendido!
+      </button>
+
+      <div className="mt-4 flex items-center justify-center">
+        <input
+          type="checkbox"
+          id="dont-show-again"
+          checked={dontShowAgain}
+          onChange={(e) => setDontShowAgain(e.target.checked)}
+          className="w-4 h-4 text-primary bg-secondary border-border rounded focus:ring-primary"
+        />
+        <label htmlFor="dont-show-again" className="ml-2 text-sm text-muted-foreground">
+          No volver a mostrar
+        </label>
       </div>
     </div>
   );
