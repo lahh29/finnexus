@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useContext, forwardRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useContext, forwardRef } from 'react';
 import { useAuth } from '../firebase/auth-provider';
 import { useFinance, EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../hooks/useFinance';
 import { useCards, CARD_GRADIENTS } from '../hooks/useCards';
