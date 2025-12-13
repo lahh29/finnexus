@@ -6,6 +6,11 @@ const SUPPORTED_CURRENCIES = [
   { code: 'MXN', name: 'Peso Mexicano', symbol: '$' },
   { code: 'USD', name: 'Dólar Americano', symbol: '$' },
   { code: 'EUR', name: 'Euro', symbol: '€' },
+  { code: 'COP', name: 'Peso Colombiano', symbol: '$' },
+  { code: 'VES', name: 'Bolívar Venezolano', symbol: 'Bs.' },
+  { code: 'ARS', name: 'Peso Argentino', symbol: '$' },
+  { code: 'BRL', name: 'Real Brasileño', symbol: 'R$' },
+  { code: 'CLP', name: 'Peso Chileno', symbol: '$' },
 ];
 
 const CurrencyContext = createContext(undefined);
