@@ -754,7 +754,7 @@ const NavItem = ({ icon, label, active, onClick, badge }) => (
   >
     {icon}
     <span className="flex-1 text-left">{label}</span>
-    {badge && badge > 0 && (
+    {badge > 0 && (
       <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold flex items-center justify-center ${
         active ? 'bg-white/20 text-white' : 'bg-destructive text-destructive-foreground'
       }`}>
@@ -773,7 +773,7 @@ const MobileNavItem = ({ icon, label, active, onClick, badge }) => (
   >
     <div className="relative">
       {icon}
-      {badge && badge > 0 && (
+      {badge > 0 && (
         <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-[10px] font-semibold text-white flex items-center justify-center">
           {badge}
         </span>
@@ -2565,9 +2565,9 @@ const UpdateNotificationModal = ({ onClose }) => {
           <PartyPopper className="w-8 h-8 text-primary" />
         </div>
       </div>
-      <h2 className="text-xl font-bold text-foreground mb-2">¡Nueva función disponible!</h2>
+      <h2 className="text-xl font-bold text-foreground mb-2">¡Nuevas funciones disponibles!</h2>
       <p className="text-muted-foreground mb-6">
-        Ahora puedes seleccionar tu moneda local desde el menú de configuración.
+        Ahora puedes gestionar tus presupuestos por categoría y seleccionar tu moneda local.
       </p>
 
       <button
