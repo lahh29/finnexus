@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useContext, forwardRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useContext } from 'react';
 import { useAuth } from '../firebase/auth-provider';
 import { useFinance, EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../hooks/useFinance';
 import { useCards, CARD_GRADIENTS } from '../hooks/useCards';
@@ -29,7 +29,7 @@ const BrandLogo = ({ size = 'default' }) => {
 
   return (
     <div className={`flex items-center ${s.container}`}>
-      <div className={`${s.icon} rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center`}>
+      <div className={`${s.icon} rounded-xl bg-primary/10 flex items-center justify-center`}>
         <CircleDollarSign className="w-1/2 h-1/2 text-primary" />
       </div>
       <span className={`font-semibold ${s.text} text-foreground tracking-tight`}>
@@ -50,23 +50,23 @@ const CategoryIcon = ({ category, type = 'expense', size = 'default' }) => {
   };
 
   const colorMap = {
-    orange: 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20',
-    blue: 'bg-blue-500/10 text-blue-500 dark:bg-blue-500/20',
-    purple: 'bg-purple-500/10 text-purple-500 dark:bg-purple-500/20',
-    pink: 'bg-pink-500/10 text-pink-500 dark:bg-pink-500/20',
-    red: 'bg-red-500/10 text-red-500 dark:bg-red-500/20',
-    indigo: 'bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20',
-    gray: 'bg-gray-500/10 text-gray-500 dark:bg-gray-500/20',
-    amber: 'bg-amber-500/10 text-amber-500 dark:bg-amber-500/20',
-    cyan: 'bg-cyan-500/10 text-cyan-500 dark:bg-cyan-500/20',
-    slate: 'bg-slate-500/10 text-slate-500 dark:bg-slate-500/20',
-    green: 'bg-green-500/10 text-green-500 dark:bg-green-500/20',
-    emerald: 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20',
-    yellow: 'bg-yellow-500/10 text-yellow-500 dark:bg-yellow-500/20',
+    orange: 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
+    blue: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+    purple: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
+    pink: 'bg-pink-500/15 text-pink-600 dark:text-pink-400',
+    red: 'bg-red-500/15 text-red-600 dark:text-red-400',
+    indigo: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400',
+    gray: 'bg-gray-500/15 text-gray-600 dark:text-gray-400',
+    amber: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+    cyan: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400',
+    slate: 'bg-slate-500/15 text-slate-600 dark:text-slate-400',
+    green: 'bg-green-500/15 text-green-600 dark:text-green-400',
+    emerald: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+    yellow: 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400',
   };
 
   return (
-    <div className={`${sizes[size]} ${colorMap[cat?.color] || colorMap.slate} flex items-center justify-center flex-shrink-0`}>
+    <div className={`${sizes[size]} ${colorMap[cat?.color || 'slate']} flex items-center justify-center flex-shrink-0`}>
       {type === 'income' ? (
         <TrendingUp className="w-1/2 h-1/2" />
       ) : (
@@ -84,7 +84,11 @@ export default function Home() {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return <DashboardSkeleton />;
+    return (
+      <div className="min-h-[100dvh] bg-background flex items-center justify-center">
+        <DashboardSkeleton />
+      </div>
+    );
   }
   
   if (!user) return <LoginPage />;
@@ -148,7 +152,7 @@ function LoginPage() {
           </p>
         </div>
 
-        <div className="flex-1 bg-card rounded-t-[2rem] px-6 pt-8 pb-safe">
+        <div className="flex-1 bg-card rounded-t-[2rem] px-6 pt-8 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.08)] dark:shadow-none">
           <form onSubmit={handleSubmit} className="space-y-4 max-w-sm mx-auto">
             {!isLogin && (
               <InputField
@@ -214,7 +218,7 @@ function LoginPage() {
 
       {/* Desktop Layout */}
       <div className="hidden lg:grid lg:grid-cols-2 min-h-[100dvh]">
-        <div className="flex items-center justify-center p-12">
+        <div className="flex items-center justify-center p-12 bg-card">
           <div className="w-full max-w-md space-y-8">
             <div>
               <BrandLogo size="large" />
@@ -290,10 +294,10 @@ function LoginPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-primary/5 via-background to-primary/10 dark:from-primary/10 dark:via-background dark:to-primary/5 flex items-center justify-center p-12 relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="bg-background flex items-center justify-center p-12 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
           <div className="relative text-center max-w-lg">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary/10 dark:bg-primary/20 mb-8 ring-1 ring-primary/20">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary/10 mb-8">
               <Sparkles className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-4xl font-bold text-foreground mb-4">
@@ -316,7 +320,7 @@ const InputField = ({ icon, ...props }) => (
     </div>
     <input
       {...props}
-      className="w-full h-12 bg-secondary/50 dark:bg-secondary/30 border border-border/50 rounded-xl pl-12 pr-4 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+      className="w-full h-12 bg-secondary/50 border border-transparent rounded-xl pl-12 pr-4 text-foreground placeholder:text-muted-foreground outline-none focus:bg-background focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
     />
   </div>
 );
@@ -370,7 +374,6 @@ function Dashboard({ user }) {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   useEffect(() => {
-    // Check if the user has seen the update notification
     const hasSeenUpdate = localStorage.getItem('hasSeenCurrencyUpdate');
     if (!hasSeenUpdate) {
       setShowUpdateModal(true);
@@ -386,7 +389,6 @@ function Dashboard({ user }) {
 
   const isLoading = loadingData || loadingCards || loadingSubs || !mounted;
 
-  // Datos para reportes
   const reportData = useMemo(() => ({
     transactions,
     balance,
@@ -400,9 +402,9 @@ function Dashboard({ user }) {
   }), [transactions, balance, income, expense, cards, subs, subTotals, totalDebt, totalLimit]);
 
   return (
-    <div className="min-h-[100dvh] bg-secondary dark:bg-background">
+    <div className="min-h-[100dvh] bg-background">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-card/50 dark:bg-card/30 backdrop-blur-xl border-r border-border/30 p-4 z-40">
+      <aside className="hidden lg:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-card border-r border-border p-4 z-40">
         <div className="p-2 mb-6">
           <BrandLogo />
         </div>
@@ -441,7 +443,7 @@ function Dashboard({ user }) {
       {/* Main Content */}
       <main className="lg:pl-64">
         {/* Mobile Header */}
-        <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between px-4 h-14">
             <BrandLogo size="small" />
             <div className="flex items-center gap-1">
@@ -504,7 +506,7 @@ function Dashboard({ user }) {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border/50 safe-area-bottom z-40">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border safe-area-bottom z-40">
         <div className="flex items-center justify-around h-16 max-w-md mx-auto">
           <MobileNavItem 
             icon={<LayoutGrid />} 
@@ -523,7 +525,7 @@ function Dashboard({ user }) {
           <div className="relative -mt-6">
             <button
               onClick={() => setActiveModal('transaction')}
-              className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/30 flex items-center justify-center active:scale-95 transition-transform"
+              className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/25 flex items-center justify-center active:scale-95 transition-transform"
             >
               <Plus className="w-6 h-6" />
             </button>
@@ -589,12 +591,12 @@ const UserProfile = ({ user, logout, isMobile = false }) => {
     return (
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors dark:hover:bg-secondary/50">
+          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
             <Settings className="w-5 h-5" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <div className="p-2">
+          <div className="p-3">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
                 {user.displayName?.[0] || user.email?.[0] || 'U'}
@@ -621,8 +623,8 @@ const UserProfile = ({ user, logout, isMobile = false }) => {
   return (
     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
       <DropdownMenuTrigger asChild>
-        <div className="mt-auto border-t border-border/30 pt-4 cursor-pointer">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-secondary dark:hover:bg-white/5 transition-colors">
+        <div className="mt-auto border-t border-border pt-4 cursor-pointer group">
+          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-secondary/50 transition-colors">
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
               {user.displayName?.[0] || user.email?.[0] || 'U'}
             </div>
@@ -652,13 +654,13 @@ const ThemeSwitcher = () => {
   const { theme, setTheme } = useThemeMounted();
 
   return (
-    <div className="p-1">
+    <div className="p-2">
       <div className="text-xs font-medium text-muted-foreground px-2 py-1">Tema</div>
-      <div className="flex bg-secondary dark:bg-secondary/30 rounded-lg p-1 mt-1">
+      <div className="flex bg-secondary/50 rounded-lg p-1 mt-1">
         <button
           onClick={() => setTheme('light')}
           className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-            theme === 'light' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
+            theme === 'light' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
           }`}
         >
           <Sun className="w-4 h-4" /> Claro
@@ -666,7 +668,7 @@ const ThemeSwitcher = () => {
         <button
           onClick={() => setTheme('dark')}
           className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-            theme === 'dark' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
+            theme === 'dark' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
           }`}
         >
           <Moon className="w-4 h-4" /> Oscuro
@@ -680,16 +682,16 @@ const CurrencySwitcher = () => {
   const { currency, setCurrency, supportedCurrencies } = useCurrency();
 
   return (
-    <div className="p-1">
+    <div className="p-2">
       <div className="text-xs font-medium text-muted-foreground px-2 py-1">Moneda</div>
       <div className="space-y-1 mt-1">
-        {supportedCurrencies.map(c => (
+        {supportedCurrencies.map((c) => (
           <button
             key={c.code}
             onClick={() => setCurrency(c.code)}
-            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm font-medium transition-colors hover:bg-secondary dark:hover:bg-secondary/30"
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm font-medium transition-colors hover:bg-secondary/50"
           >
-            <span>{c.code} - {c.name}</span>
+            <span className="text-foreground">{c.code} - {c.name}</span>
             {currency === c.code && <CheckCircle className="w-4 h-4 text-primary" />}
           </button>
         ))}
@@ -708,12 +710,12 @@ const NavItem = ({ icon, label, active, onClick, badge }) => (
     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
       active 
         ? 'bg-primary text-primary-foreground' 
-        : 'text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-white/5'
+        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
     }`}
   >
     {icon}
     <span className="flex-1 text-left">{label}</span>
-    {badge > 0 && (
+    {badge && badge > 0 && (
       <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold flex items-center justify-center ${
         active ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'
       }`}>
@@ -732,7 +734,7 @@ const MobileNavItem = ({ icon, label, active, onClick, badge }) => (
   >
     <div className="relative">
       {icon}
-      {badge > 0 && (
+      {badge && badge > 0 && (
         <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-[10px] font-semibold text-white flex items-center justify-center">
           {badge}
         </span>
@@ -752,44 +754,44 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
   return (
     <div className="space-y-6 animate-enter">
       {/* Balance Card */}
-      <section className="rounded-3xl bg-foreground text-background p-6 md:p-8 relative overflow-hidden shadow-2xl group ring-1 ring-black/10 dark:ring-white/5">
-        <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 rounded-full bg-primary/20 blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
+      <section className="rounded-3xl bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white p-6 md:p-8 relative overflow-hidden shadow-2xl">
+        <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 rounded-full bg-white/5 blur-3xl" />
         <div className="relative">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-background/60">Balance Total</span>
+            <span className="text-sm font-medium text-white/60">Balance Total</span>
             <button
               onClick={() => setShowBalance(!showBalance)}
-              className="p-1.5 rounded-lg bg-background/10 text-background/70 hover:text-background transition-colors"
+              className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:text-white transition-colors"
             >
               {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
           </div>
           
           <div className="mb-4">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-background">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
               {showBalance ? formatCurrency(balance) : '••••••'}
             </h2>
-            <p className="text-sm text-background/50 mt-1">
+            <p className="text-sm text-white/50 mt-1">
               {showBalance ? `Descontando ${formatCurrency(subTotals.monthlyTotal)} de fijos` : '••••••'}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 bg-background/10 backdrop-blur rounded-xl p-4">
+            <div className="flex-1 bg-white/10 backdrop-blur rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-green-400" />
-                <span className="text-xs text-background/60 uppercase font-medium">Ingresos</span>
+                <span className="text-xs text-white/60 uppercase font-medium">Ingresos</span>
               </div>
-              <p className="text-xl font-semibold text-background">
+              <p className="text-xl font-semibold">
                 {showBalance ? formatCurrency(income) : '••••'}
               </p>
             </div>
-            <div className="flex-1 bg-background/10 backdrop-blur rounded-xl p-4">
+            <div className="flex-1 bg-white/10 backdrop-blur rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingDown className="w-4 h-4 text-red-400" />
-                <span className="text-xs text-background/60 uppercase font-medium">Gastos</span>
+                <span className="text-xs text-white/60 uppercase font-medium">Gastos</span>
               </div>
-              <p className="text-xl font-semibold text-background">
+              <p className="text-xl font-semibold">
                 {showBalance ? formatCurrency(expense) : '••••'}
               </p>
             </div>
@@ -819,7 +821,7 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
 
       {/* Alerts */}
       {(subAlerts.dueToday.length > 0 || subAlerts.dueSoon.length > 0) && (
-        <section className="bg-amber-500/10 dark:bg-amber-500/20 rounded-2xl p-4">
+        <section className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4">
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
             <Bell className="w-4 h-4" />
             <span className="text-sm font-medium">
@@ -842,14 +844,14 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
           />
           <div className="relative -mx-4 px-4">
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-              {cards.map((card, index) => (
+              {cards.map((card) => (
                 <div key={card.id} className="flex-shrink-0 w-72 snap-start">
                   <MiniCard card={card} formatCurrency={formatCurrency} />
                 </div>
               ))}
               <div
                 onClick={() => actions.setCurrentView('cards')}
-                className="flex-shrink-0 w-72 snap-start flex flex-col items-center justify-center bg-card border-2 border-dashed border-border/50 rounded-2xl text-muted-foreground hover:text-primary hover:border-primary transition-all cursor-pointer"
+                className="flex-shrink-0 w-72 h-44 snap-start flex flex-col items-center justify-center bg-card border-2 border-dashed border-border rounded-2xl text-muted-foreground hover:text-primary hover:border-primary transition-all cursor-pointer"
               >
                 <Plus className="w-6 h-6 mb-2" />
                 <span className="text-sm font-medium">Ver todas las tarjetas</span>
@@ -863,7 +865,7 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
       <section>
         <SectionHeader title="Últimas Transacciones" />
         <div className="space-y-2">
-          {transactions.slice(0, 5).map(t => (
+          {transactions.slice(0, 5).map((t) => (
             <TransactionItem 
               key={t.id} 
               transaction={t} 
@@ -890,7 +892,7 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
             onAction={() => actions.setCurrentView('subscriptions')}
           />
           <div className="space-y-2">
-            {subs.slice(0, 3).map(sub => (
+            {subs.slice(0, 3).map((sub) => (
               <SubscriptionItem 
                 key={sub.id} 
                 subscription={sub} 
@@ -910,8 +912,8 @@ const QuickAction = ({ icon, label, onClick, primary }) => (
     onClick={onClick}
     className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all active:scale-95 ${
       primary 
-        ? 'bg-primary text-primary-foreground' 
-        : 'bg-card border border-border/50 text-foreground hover:bg-secondary dark:hover:bg-secondary/30'
+        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+        : 'bg-card border border-border text-foreground hover:bg-secondary/50'
     }`}
   >
     {icon}
@@ -938,13 +940,26 @@ const SectionHeader = ({ title, subtitle, action, onAction }) => (
 );
 
 const MiniCard = ({ card, formatCurrency }) => {
-  const gradient = card.bgGradient || 'from-slate-600 to-slate-800';
   const utilizationPercent = card.limit > 0 ? Math.min((card.currentDebt / card.limit) * 100, 100) : 0;
+
+  // Parse gradient for inline style
+  const gradientColors = {
+    'from-slate-600 to-slate-800': 'linear-gradient(135deg, #475569, #1e293b)',
+    'from-blue-600 to-blue-800': 'linear-gradient(135deg, #2563eb, #1e40af)',
+    'from-purple-600 to-purple-800': 'linear-gradient(135deg, #9333ea, #6b21a8)',
+    'from-green-600 to-green-800': 'linear-gradient(135deg, #16a34a, #166534)',
+    'from-red-600 to-red-800': 'linear-gradient(135deg, #dc2626, #991b1b)',
+    'from-amber-500 to-orange-600': 'linear-gradient(135deg, #f59e0b, #ea580c)',
+    'from-pink-500 to-rose-600': 'linear-gradient(135deg, #ec4899, #e11d48)',
+    'from-cyan-500 to-teal-600': 'linear-gradient(135deg, #06b6d4, #0d9488)',
+  };
+
+  const bgStyle = gradientColors[card.bgGradient] || gradientColors['from-slate-600 to-slate-800'];
 
   return (
     <div 
-      className="bg-gradient-to-br rounded-2xl p-5 text-white h-44 flex flex-col justify-between shadow-lg"
-      style={{ backgroundImage: `linear-gradient(to bottom right, ${gradient.replace('from-', '').replace(' to-', ',')})` }}
+      className="rounded-2xl p-5 text-white h-44 flex flex-col justify-between shadow-lg"
+      style={{ background: bgStyle }}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -973,14 +988,14 @@ const TransactionItem = ({ transaction, formatCurrency, onDelete }) => {
   const isIncome = transaction.type === 'income';
   
   return (
-    <div className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border/50 group">
+    <div className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border group hover:border-border/80 transition-colors">
       <CategoryIcon category={transaction.category} type={transaction.type} size="default" />
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm text-foreground truncate">{transaction.description}</p>
         <p className="text-xs text-muted-foreground capitalize">{transaction.category}</p>
       </div>
       <div className="text-right flex items-center gap-2">
-        <p className={`font-semibold text-sm ${isIncome ? 'text-green-500' : 'text-foreground'}`}>
+        <p className={`font-semibold text-sm ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-foreground'}`}>
           {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
         </p>
         <button 
@@ -998,15 +1013,15 @@ const SubscriptionItem = ({ subscription, formatCurrency, onDelete }) => {
   const isUrgent = subscription.daysLeft <= 3;
   
   return (
-    <div className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border/50 group">
+    <div className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border group hover:border-border/80 transition-colors">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-        isUrgent ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'
+        isUrgent ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-primary/10 text-primary'
       }`}>
         <Calendar className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm text-foreground truncate">{subscription.name}</p>
-        <p className={`text-xs ${isUrgent ? 'text-amber-500 font-medium' : 'text-muted-foreground'}`}>
+        <p className={`text-xs ${isUrgent ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-muted-foreground'}`}>
           {subscription.daysLeft === 0 ? '¡Vence hoy!' : `En ${subscription.daysLeft} días`}
         </p>
       </div>
@@ -1025,7 +1040,7 @@ const SubscriptionItem = ({ subscription, formatCurrency, onDelete }) => {
 
 const EmptyState = ({ icon, message }) => (
   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-    <div className="w-12 h-12 rounded-full bg-secondary dark:bg-secondary/30 flex items-center justify-center mb-3">
+    <div className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center mb-3">
       {icon}
     </div>
     <p className="text-sm">{message}</p>
@@ -1036,96 +1051,99 @@ const EmptyState = ({ icon, message }) => (
 // CARDS VIEW
 // ============================================
 
-const CardsView = ({ cards, addCard, deleteCard, formatCurrency, canAddMore }) => (
-  <div className="space-y-6 animate-enter">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Mis Tarjetas</h1>
-        <p className="text-sm text-muted-foreground">{cards.length} tarjeta(s) registrada(s)</p>
-      </div>
-      {canAddMore && (
-        <button
-          onClick={addCard}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Agregar
-        </button>
-      )}
-    </div>
-
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {cards.map(card => (
-        <CardItem 
-          key={card.id} 
-          card={card} 
-          formatCurrency={formatCurrency}
-          onDelete={() => deleteCard(card.id)}
-        />
-      ))}
-      
-      {cards.length === 0 && (
-        <div className="col-span-full">
-          <EmptyState 
-            icon={<CreditCard className="w-8 h-8" />}
-            message="No hay tarjetas registradas"
-          />
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-const CardItem = ({ card, formatCurrency, onDelete }) => {
-  const gradient = card.bgGradient || 'from-slate-600 to-slate-800';
-  const utilizationPercent = card.limit > 0 ? Math.min((card.currentDebt / card.limit) * 100, 100) : 0;
-  const isHighUtilization = utilizationPercent > 80;
+const CardsView = ({ cards, addCard, deleteCard, formatCurrency, canAddMore }) => {
+  const gradientColors = {
+    'from-slate-600 to-slate-800': 'linear-gradient(135deg, #475569, #1e293b)',
+    'from-blue-600 to-blue-800': 'linear-gradient(135deg, #2563eb, #1e40af)',
+    'from-purple-600 to-purple-800': 'linear-gradient(135deg, #9333ea, #6b21a8)',
+    'from-green-600 to-green-800': 'linear-gradient(135deg, #16a34a, #166534)',
+    'from-red-600 to-red-800': 'linear-gradient(135deg, #dc2626, #991b1b)',
+    'from-amber-500 to-orange-600': 'linear-gradient(135deg, #f59e0b, #ea580c)',
+    'from-pink-500 to-rose-600': 'linear-gradient(135deg, #ec4899, #e11d48)',
+    'from-cyan-500 to-teal-600': 'linear-gradient(135deg, #06b6d4, #0d9488)',
+  };
 
   return (
-    <div 
-      className="rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white relative overflow-hidden group shadow-lg"
-      style={{ backgroundImage: `linear-gradient(to bottom right, ${gradient.replace('from-', '').replace(' to-', ',')})` }}
-    >
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iIzAwMDAwMCIgZmlsbC1vcGFjaXR5PSIwLjAzIj48L3JlY3Q+Cjwvc3ZnPg==')] opacity-50" />
-      
-      <div className="relative">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <p className="text-xs text-white/60 font-medium uppercase tracking-wider">Tarjeta</p>
-            <h3 className="text-xl font-bold mt-1">{card.name}</h3>
-          </div>
-          <button
-            onClick={onDelete}
-            className="p-2 rounded-lg bg-white/10 text-white/70 hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+    <div className="space-y-6 animate-enter">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Mis Tarjetas</h1>
+          <p className="text-sm text-muted-foreground">{cards.length} tarjeta(s) registrada(s)</p>
         </div>
+        {canAddMore && (
+          <button
+            onClick={addCard}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Agregar
+          </button>
+        )}
+      </div>
 
-        <div className="mb-4">
-          <div className="flex justify-between items-baseline mb-2">
-            <span className="text-2xl sm:text-3xl font-bold">{formatCurrency(card.currentDebt)}</span>
-            <span className="text-sm text-white/70">de {formatCurrency(card.limit)}</span>
-          </div>
-          <div className="h-2 bg-black/20 rounded-full overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {cards.map((card) => {
+          const utilizationPercent = card.limit > 0 ? Math.min((card.currentDebt / card.limit) * 100, 100) : 0;
+          const isHighUtilization = utilizationPercent > 80;
+          const bgStyle = gradientColors[card.bgGradient] || gradientColors['from-slate-600 to-slate-800'];
+
+          return (
             <div 
-              className={`h-full rounded-full transition-all duration-500 ${isHighUtilization ? 'bg-red-400' : 'bg-white/80'}`}
-              style={{ width: `${utilizationPercent}%` }}
+              key={card.id}
+              className="rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white relative overflow-hidden group shadow-lg"
+              style={{ background: bgStyle }}
+            >
+              <div className="relative">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <p className="text-xs text-white/60 font-medium uppercase tracking-wider">Tarjeta</p>
+                    <h3 className="text-xl font-bold mt-1">{card.name}</h3>
+                  </div>
+                  <button
+                    onClick={() => deleteCard(card.id)}
+                    className="p-2 rounded-lg bg-white/10 text-white/70 hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-2xl sm:text-3xl font-bold">{formatCurrency(card.currentDebt)}</span>
+                    <span className="text-sm text-white/70">de {formatCurrency(card.limit)}</span>
+                  </div>
+                  <div className="h-2 bg-black/20 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${isHighUtilization ? 'bg-red-400' : 'bg-white/80'}`}
+                      style={{ width: `${utilizationPercent}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-white/60 mt-1">{Math.round(utilizationPercent)}% utilizado</p>
+                </div>
+
+                <div className="flex gap-3 text-xs">
+                  <div className="bg-black/20 backdrop-blur rounded-lg px-3 py-2">
+                    <span className="text-white/60">Corte</span>
+                    <span className="ml-2 text-white font-medium">Día {card.cutoffDay}</span>
+                  </div>
+                  <div className="bg-black/20 backdrop-blur rounded-lg px-3 py-2">
+                    <span className="text-white/60">Pago</span>
+                    <span className="ml-2 text-white font-medium">Día {card.paymentDay}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        
+        {cards.length === 0 && (
+          <div className="col-span-full">
+            <EmptyState 
+              icon={<CreditCard className="w-8 h-8" />}
+              message="No hay tarjetas registradas"
             />
           </div>
-          <p className="text-xs text-white/60 mt-1">{Math.round(utilizationPercent)}% utilizado</p>
-        </div>
-
-        <div className="flex gap-3 text-xs">
-          <div className="bg-black/20 backdrop-blur rounded-lg px-3 py-2">
-            <span className="text-white/60">Corte</span>
-            <span className="ml-2 text-white font-medium">Día {card.cutoffDay}</span>
-          </div>
-          <div className="bg-black/20 backdrop-blur rounded-lg px-3 py-2">
-            <span className="text-white/60">Pago</span>
-            <span className="ml-2 text-white font-medium">Día {card.paymentDay}</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -1161,13 +1179,13 @@ const SubscriptionsView = ({ subs, totals, alerts, addSub, deleteSub, markAsPaid
 
     {/* Alerts */}
     {(alerts.overdue?.length > 0 || alerts.dueToday?.length > 0) && (
-      <div className="bg-destructive/10 rounded-2xl p-4">
+      <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4">
         <div className="flex items-center gap-2 text-destructive mb-2">
           <AlertCircle className="w-4 h-4" />
           <span className="text-sm font-medium">Atención requerida</span>
         </div>
         <div className="space-y-2">
-          {[...(alerts.overdue || []), ...(alerts.dueToday || [])].map(sub => (
+          {[...(alerts.overdue || []), ...(alerts.dueToday || [])].map((sub) => (
             <div key={sub.id} className="flex items-center justify-between text-sm">
               <span className="text-foreground">{sub.name}</span>
               <span className="text-destructive font-medium">{formatCurrency(sub.amount)}</span>
@@ -1179,15 +1197,54 @@ const SubscriptionsView = ({ subs, totals, alerts, addSub, deleteSub, markAsPaid
 
     {/* Subscription List */}
     <div className="space-y-2">
-      {subs.map(sub => (
-        <SubscriptionDetailItem 
-          key={sub.id} 
-          subscription={sub} 
-          formatCurrency={formatCurrency}
-          onDelete={() => deleteSub(sub.id)}
-          onMarkPaid={() => markAsPaid(sub.id)}
-        />
-      ))}
+      {subs.map((sub) => {
+        const isUrgent = sub.daysLeft <= 3;
+        const isDueToday = sub.daysLeft === 0;
+        
+        return (
+          <div 
+            key={sub.id}
+            className={`flex items-center gap-3 p-4 rounded-2xl border group transition-colors ${
+              isDueToday 
+                ? 'bg-amber-500/5 border-amber-500/30' 
+                : 'bg-card border-border hover:border-border/80'
+            }`}
+          >
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              isDueToday ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-secondary/50 text-muted-foreground'
+            }`}>
+              <Calendar className="w-5 h-5" />
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-foreground truncate">{sub.name}</p>
+              <p className={`text-xs ${isUrgent ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-muted-foreground'}`}>
+                {isDueToday ? '¡Vence hoy!' : sub.daysLeft === 1 ? 'Mañana' : `En ${sub.daysLeft} días`}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-foreground">{formatCurrency(sub.amount)}</p>
+              
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => markAsPaid(sub.id)}
+                  className="p-1.5 rounded-lg text-green-600 dark:text-green-400 hover:bg-green-500/10 transition-colors"
+                  title="Marcar como pagado"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteSub(sub.id)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
       
       {subs.length === 0 && (
         <EmptyState 
@@ -1200,57 +1257,11 @@ const SubscriptionsView = ({ subs, totals, alerts, addSub, deleteSub, markAsPaid
 );
 
 const SummaryCard = ({ label, value, highlight }) => (
-  <div className={`p-4 rounded-2xl ${highlight ? 'bg-amber-500/10 dark:bg-amber-500/20' : 'bg-card border border-border/50'}`}>
+  <div className={`p-4 rounded-2xl ${highlight ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-card border border-border'}`}>
     <p className={`text-xs font-medium mb-1 ${highlight ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>{label}</p>
     <p className={`text-lg font-bold ${highlight ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>{value}</p>
   </div>
 );
-
-const SubscriptionDetailItem = ({ subscription, formatCurrency, onDelete, onMarkPaid }) => {
-  const isUrgent = subscription.daysLeft <= 3;
-  const isDueToday = subscription.daysLeft === 0;
-  
-  return (
-    <div className={`flex items-center gap-3 p-4 rounded-2xl border group transition-colors ${
-      isDueToday 
-        ? 'bg-amber-500/5 border-amber-500/20' 
-        : 'bg-card border-border/50 hover:border-border'
-    }`}>
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-        isDueToday ? 'bg-amber-500/10 text-amber-500' : 'bg-secondary dark:bg-secondary/30 text-muted-foreground'
-      }`}>
-        <Calendar className="w-5 h-5" />
-      </div>
-      
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">{subscription.name}</p>
-        <p className={`text-xs ${isUrgent ? 'text-amber-500 font-medium' : 'text-muted-foreground'}`}>
-          {isDueToday ? '¡Vence hoy!' : subscription.daysLeft === 1 ? 'Mañana' : `En ${subscription.daysLeft} días`}
-        </p>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <p className="font-semibold text-foreground">{formatCurrency(subscription.amount)}</p>
-        
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={onMarkPaid}
-            className="p-1.5 rounded-lg text-green-500 hover:bg-green-500/10 transition-colors"
-            title="Marcar como pagado"
-          >
-            <Check className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // ============================================
 // STATS VIEW (REPORTES)
@@ -1259,36 +1270,33 @@ const SubscriptionDetailItem = ({ subscription, formatCurrency, onDelete, onMark
 const StatsView = ({ data, formatCurrency }) => {
   const { transactions, balance, income, expense, cards, subs, subTotals, totalDebt, totalLimit } = data;
 
-  // Transacciones del mes actual
   const currentMonthTransactions = useMemo(() => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    return transactions.filter(t => {
+    return transactions.filter((t) => {
       const date = t.date instanceof Date ? t.date : new Date(t.date);
       return date >= startOfMonth;
     });
   }, [transactions]);
 
-  // Transacciones del mes anterior
   const lastMonthTransactions = useMemo(() => {
     const now = new Date();
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
     
-    return transactions.filter(t => {
+    return transactions.filter((t) => {
       const date = t.date instanceof Date ? t.date : new Date(t.date);
       return date >= startOfLastMonth && date <= endOfLastMonth;
     });
   }, [transactions]);
 
-  // Gastos por categoría
   const expensesByCategory = useMemo(() => {
-    const expenses = currentMonthTransactions.filter(t => t.type === 'expense');
+    const expenses = currentMonthTransactions.filter((t) => t.type === 'expense');
     const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
     const grouped = {};
     
-    expenses.forEach(t => {
+    expenses.forEach((t) => {
       const cat = t.category || 'other';
       if (!grouped[cat]) {
         grouped[cat] = { amount: 0, count: 0 };
@@ -1306,7 +1314,6 @@ const StatsView = ({ data, formatCurrency }) => {
       .sort((a, b) => b.amount - a.amount);
   }, [currentMonthTransactions]);
 
-  // Tendencia mensual (últimos 6 meses)
   const monthlyTrend = useMemo(() => {
     const months = [];
     const now = new Date();
@@ -1316,17 +1323,17 @@ const StatsView = ({ data, formatCurrency }) => {
       const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
       const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
 
-      const monthTransactions = transactions.filter(t => {
+      const monthTransactions = transactions.filter((t) => {
         const date = t.date instanceof Date ? t.date : new Date(t.date);
         return date >= startOfMonth && date <= endOfMonth;
       });
 
       const monthIncome = monthTransactions
-        .filter(t => t.type === 'income')
+        .filter((t) => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
       
       const monthExpense = monthTransactions
-        .filter(t => t.type === 'expense')
+        .filter((t) => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
       months.push({
@@ -1340,22 +1347,21 @@ const StatsView = ({ data, formatCurrency }) => {
     return months;
   }, [transactions]);
 
-  // Comparación mensual
   const monthComparison = useMemo(() => {
     const currentIncome = currentMonthTransactions
-      .filter(t => t.type === 'income')
+      .filter((t) => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
     
     const currentExpense = currentMonthTransactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const lastIncome = lastMonthTransactions
-      .filter(t => t.type === 'income')
+      .filter((t) => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
     
     const lastExpense = lastMonthTransactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const incomeChange = lastIncome > 0 
@@ -1373,12 +1379,10 @@ const StatsView = ({ data, formatCurrency }) => {
     };
   }, [currentMonthTransactions, lastMonthTransactions]);
 
-  // Utilización de crédito
   const creditUtilization = useMemo(() => {
     return totalLimit > 0 ? (totalDebt / totalLimit) * 100 : 0;
   }, [totalDebt, totalLimit]);
 
-  // Salud financiera
   const financialHealth = useMemo(() => {
     const savingsRate = income > 0 ? ((income - expense) / income) * 100 : 0;
     const fixedExpenseRatio = income > 0 ? ((subTotals?.monthlyTotal || 0) / income) * 100 : 0;
@@ -1417,15 +1421,13 @@ const StatsView = ({ data, formatCurrency }) => {
     };
   }, [income, expense, subTotals, creditUtilization]);
 
-  // Top gastos
   const topExpenses = useMemo(() => {
     return currentMonthTransactions
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === 'expense')
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
   }, [currentMonthTransactions]);
 
-  // Proyección
   const projection = useMemo(() => {
     const now = new Date();
     const dayOfMonth = now.getDate();
@@ -1462,10 +1464,10 @@ const StatsView = ({ data, formatCurrency }) => {
   };
 
   const getHealthColor = (score) => {
-    if (score >= 85) return 'text-green-500';
-    if (score >= 70) return 'text-blue-500';
-    if (score >= 50) return 'text-yellow-500';
-    return 'text-red-500';
+    if (score >= 85) return 'text-green-600 dark:text-green-400';
+    if (score >= 70) return 'text-blue-600 dark:text-blue-400';
+    if (score >= 50) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   const getHealthLabel = (score) => {
@@ -1475,11 +1477,10 @@ const StatsView = ({ data, formatCurrency }) => {
     return 'Necesita atención';
   };
 
-  // Si no hay datos
   if (transactions.length === 0 && cards.length === 0 && subs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center animate-enter">
-        <div className="w-20 h-20 rounded-full bg-secondary dark:bg-secondary/30 flex items-center justify-center mb-4">
+        <div className="w-20 h-20 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
           <ChartPie className="w-10 h-10 text-muted-foreground" />
         </div>
         <h2 className="text-xl font-bold text-foreground mb-2">Sin datos suficientes</h2>
@@ -1492,14 +1493,13 @@ const StatsView = ({ data, formatCurrency }) => {
 
   return (
     <div className="space-y-6 animate-enter">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Reportes</h1>
         <p className="text-sm text-muted-foreground">Análisis detallado de tus finanzas</p>
       </div>
 
       {/* Salud Financiera */}
-      <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+      <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-foreground flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
@@ -1511,7 +1511,7 @@ const StatsView = ({ data, formatCurrency }) => {
         </div>
         
         <div className="mb-4">
-          <div className="h-3 bg-secondary dark:bg-secondary/30 rounded-full overflow-hidden">
+          <div className="h-3 bg-secondary/50 rounded-full overflow-hidden">
             <div 
               className={`h-full rounded-full transition-all duration-500 ${
                 financialHealth.score >= 85 ? 'bg-green-500' :
@@ -1529,30 +1529,30 @@ const StatsView = ({ data, formatCurrency }) => {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Tasa de ahorro</p>
-            <p className={`text-lg font-bold ${financialHealth.savingsRate >= 20 ? 'text-green-500' : financialHealth.savingsRate >= 0 ? 'text-yellow-500' : 'text-red-500'}`}>
+            <p className={`text-lg font-bold ${financialHealth.savingsRate >= 20 ? 'text-green-600 dark:text-green-400' : financialHealth.savingsRate >= 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
               {financialHealth.savingsRate.toFixed(1)}%
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground mb-1">Gastos fijos</p>
-            <p className={`text-lg font-bold ${financialHealth.fixedExpenseRatio <= 30 ? 'text-green-500' : financialHealth.fixedExpenseRatio <= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
+            <p className={`text-lg font-bold ${financialHealth.fixedExpenseRatio <= 30 ? 'text-green-600 dark:text-green-400' : financialHealth.fixedExpenseRatio <= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
               {financialHealth.fixedExpenseRatio.toFixed(1)}%
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground mb-1">Uso de crédito</p>
-            <p className={`text-lg font-bold ${creditUtilization <= 30 ? 'text-green-500' : creditUtilization <= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
+            <p className={`text-lg font-bold ${creditUtilization <= 30 ? 'text-green-600 dark:text-green-400' : creditUtilization <= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
               {creditUtilization.toFixed(1)}%
             </p>
           </div>
         </div>
 
         {financialHealth.recommendations.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border/50">
+          <div className="mt-4 pt-4 border-t border-border">
             <p className="text-xs font-medium text-muted-foreground mb-2">Recomendaciones</p>
             <div className="space-y-2">
               {financialHealth.recommendations.map((rec, i) => (
-                <div key={i} className="text-sm p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <div key={i} className="text-sm p-2 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300">
                   {rec}
                 </div>
               ))}
@@ -1562,7 +1562,7 @@ const StatsView = ({ data, formatCurrency }) => {
       </div>
 
       {/* Comparación mensual */}
-      <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+      <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
         <h3 className="font-semibold text-foreground mb-4">Este mes vs. Anterior</h3>
         
         <div className="grid grid-cols-2 gap-4">
@@ -1571,8 +1571,8 @@ const StatsView = ({ data, formatCurrency }) => {
               <span className="text-sm text-muted-foreground">Ingresos</span>
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 monthComparison.change.income >= 0 
-                  ? 'bg-green-500/10 text-green-500' 
-                  : 'bg-red-500/10 text-red-500'
+                  ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
+                  : 'bg-red-500/10 text-red-600 dark:text-red-400'
               }`}>
                 {monthComparison.change.income >= 0 ? '+' : ''}{monthComparison.change.income.toFixed(1)}%
               </span>
@@ -1586,8 +1586,8 @@ const StatsView = ({ data, formatCurrency }) => {
               <span className="text-sm text-muted-foreground">Gastos</span>
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 monthComparison.change.expense <= 0 
-                  ? 'bg-green-500/10 text-green-500' 
-                  : 'bg-red-500/10 text-red-500'
+                  ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
+                  : 'bg-red-500/10 text-red-600 dark:text-red-400'
               }`}>
                 {monthComparison.change.expense >= 0 ? '+' : ''}{monthComparison.change.expense.toFixed(1)}%
               </span>
@@ -1599,7 +1599,7 @@ const StatsView = ({ data, formatCurrency }) => {
       </div>
 
       {/* Tendencia mensual */}
-      <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+      <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
         <h3 className="font-semibold text-foreground mb-4">Últimos 6 meses</h3>
         
         <div className="space-y-3">
@@ -1612,7 +1612,7 @@ const StatsView = ({ data, formatCurrency }) => {
               <div key={i} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground capitalize">{month.month}</span>
-                  <span className={`font-medium ${month.net >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <span className={`font-medium ${month.net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {month.net >= 0 ? '+' : ''}{formatCurrency(month.net)}
                   </span>
                 </div>
@@ -1631,7 +1631,7 @@ const StatsView = ({ data, formatCurrency }) => {
           })}
         </div>
         
-        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border/50 text-xs">
+        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-green-500 rounded-full" />
             <span className="text-muted-foreground">Ingresos</span>
@@ -1645,85 +1645,47 @@ const StatsView = ({ data, formatCurrency }) => {
 
       {/* Gastos por categoría */}
       {expensesByCategory.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+        <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
           <h3 className="font-semibold text-foreground mb-4">Gastos por Categoría</h3>
           
-          <div className="space-y-4">
-            {/* Gráfico circular simple */}
-            <div className="flex items-center justify-center py-4">
-              <div className="relative w-32 h-32">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                  {expensesByCategory.reduce((acc, cat, i) => {
-                    const prevOffset = acc.offset;
-                    const dashArray = cat.percentage;
-                    const colorClass = getCategoryColor(cat.category).replace('bg-', '');
-                    
-                    acc.elements.push(
-                      <circle
-                        key={cat.category}
-                        className={`stroke-${colorClass}`}
-                        style={{ stroke: `var(--${colorClass}, currentColor)` }}
-                        strokeWidth="4"
-                        strokeDasharray={`${dashArray} ${100 - dashArray}`}
-                        strokeDashoffset={-prevOffset}
-                        strokeLinecap="round"
-                        fill="transparent"
-                        r="16"
-                        cx="18"
-                        cy="18"
-                      />
-                    );
-                    acc.offset += dashArray;
-                    return acc;
-                  }, { elements: [], offset: 0 }).elements}
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg font-bold text-foreground">{formatCurrency(expense)}</span>
-                  <span className="text-xs text-muted-foreground">Total</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Lista */}
-            <div className="space-y-3">
-              {expensesByCategory.slice(0, 5).map((cat) => (
-                <div key={cat.category} className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${getCategoryColor(cat.category)}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-foreground truncate">
-                        {getCategoryName(cat.category)}
-                      </span>
-                      <span className="text-sm text-foreground font-medium ml-2">
-                        {formatCurrency(cat.amount)}
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-secondary dark:bg-secondary/30 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${getCategoryColor(cat.category)}`}
-                        style={{ width: `${cat.percentage}%` }}
-                      />
-                    </div>
+          <div className="space-y-3">
+            {expensesByCategory.slice(0, 5).map((cat) => (
+              <div key={cat.category} className="flex items-center gap-3">
+                <div className={`w-3 h-3 rounded-full ${getCategoryColor(cat.category)}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {getCategoryName(cat.category)}
+                    </span>
+                    <span className="text-sm text-foreground font-medium ml-2">
+                      {formatCurrency(cat.amount)}
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground w-12 text-right">
-                    {cat.percentage.toFixed(1)}%
-                  </span>
+                  <div className="h-1.5 bg-secondary/50 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full ${getCategoryColor(cat.category)}`}
+                      style={{ width: `${cat.percentage}%` }}
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+                <span className="text-xs text-muted-foreground w-12 text-right">
+                  {cat.percentage.toFixed(1)}%
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* Top gastos */}
       {topExpenses.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+        <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
           <h3 className="font-semibold text-foreground mb-4">Mayores Gastos del Mes</h3>
           
           <div className="space-y-3">
             {topExpenses.map((t, i) => (
               <div key={t.id} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-secondary dark:bg-secondary/30 flex items-center justify-center text-xs font-bold text-muted-foreground">
+                <div className="w-6 h-6 rounded-full bg-secondary/50 flex items-center justify-center text-xs font-bold text-muted-foreground">
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1741,20 +1703,20 @@ const StatsView = ({ data, formatCurrency }) => {
 
       {/* Resumen de tarjetas */}
       {cards.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+        <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
           <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-primary" />
             Resumen de Tarjetas
           </h3>
           
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-secondary/50 dark:bg-secondary/20 rounded-xl p-3">
+            <div className="bg-secondary/30 rounded-xl p-3">
               <p className="text-xs text-muted-foreground mb-1">Deuda Total</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(totalDebt)}</p>
             </div>
-            <div className="bg-secondary/50 dark:bg-secondary/20 rounded-xl p-3">
+            <div className="bg-secondary/30 rounded-xl p-3">
               <p className="text-xs text-muted-foreground mb-1">Crédito Disponible</p>
-              <p className="text-lg font-bold text-green-500">{formatCurrency(totalLimit - totalDebt)}</p>
+              <p className="text-lg font-bold text-green-600 dark:text-green-400">{formatCurrency(totalLimit - totalDebt)}</p>
             </div>
           </div>
 
@@ -1762,13 +1724,13 @@ const StatsView = ({ data, formatCurrency }) => {
             <div className="flex items-center justify-between text-sm mb-1">
               <span className="text-muted-foreground">Utilización</span>
               <span className={`font-medium ${
-                creditUtilization <= 30 ? 'text-green-500' : 
-                creditUtilization <= 50 ? 'text-yellow-500' : 'text-red-500'
+                creditUtilization <= 30 ? 'text-green-600 dark:text-green-400' : 
+                creditUtilization <= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
               }`}>
                 {creditUtilization.toFixed(1)}%
               </span>
             </div>
-            <div className="h-2 bg-secondary dark:bg-secondary/30 rounded-full overflow-hidden">
+            <div className="h-2 bg-secondary/50 rounded-full overflow-hidden">
               <div 
                 className={`h-full rounded-full transition-all ${
                   creditUtilization <= 30 ? 'bg-green-500' : 
@@ -1783,18 +1745,18 @@ const StatsView = ({ data, formatCurrency }) => {
 
       {/* Resumen de suscripciones */}
       {subs.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+        <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
           <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary" />
             Resumen de Suscripciones
           </h3>
           
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-secondary/50 dark:bg-secondary/20 rounded-xl p-3">
+            <div className="bg-secondary/30 rounded-xl p-3">
               <p className="text-xs text-muted-foreground mb-1">Gasto Mensual</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(subTotals?.monthlyTotal || 0)}</p>
             </div>
-            <div className="bg-secondary/50 dark:bg-secondary/20 rounded-xl p-3">
+            <div className="bg-secondary/30 rounded-xl p-3">
               <p className="text-xs text-muted-foreground mb-1">Gasto Anual</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(subTotals?.annualTotal || 0)}</p>
             </div>
@@ -1803,7 +1765,7 @@ const StatsView = ({ data, formatCurrency }) => {
       )}
 
       {/* Proyección */}
-      <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6">
+      <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
         <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
           <PiggyBank className="w-5 h-5 text-primary" />
           Proyección del Mes
@@ -1812,15 +1774,15 @@ const StatsView = ({ data, formatCurrency }) => {
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="bg-green-500/10 rounded-xl p-3">
             <p className="text-xs text-muted-foreground mb-1">Ingresos Est.</p>
-            <p className="text-sm font-bold text-green-500">{formatCurrency(projection.projectedIncome)}</p>
+            <p className="text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(projection.projectedIncome)}</p>
           </div>
           <div className="bg-red-500/10 rounded-xl p-3">
             <p className="text-xs text-muted-foreground mb-1">Gastos Est.</p>
-            <p className="text-sm font-bold text-red-500">{formatCurrency(projection.projectedExpense)}</p>
+            <p className="text-sm font-bold text-red-600 dark:text-red-400">{formatCurrency(projection.projectedExpense)}</p>
           </div>
           <div className={`rounded-xl p-3 ${projection.projectedBalance >= 0 ? 'bg-blue-500/10' : 'bg-red-500/10'}`}>
             <p className="text-xs text-muted-foreground mb-1">Balance Est.</p>
-            <p className={`text-sm font-bold ${projection.projectedBalance >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
+            <p className={`text-sm font-bold ${projection.projectedBalance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
               {formatCurrency(projection.projectedBalance)}
             </p>
           </div>
@@ -1859,7 +1821,7 @@ const Modal = ({ isOpen, onClose, children }) => {
         onClick={onClose}
       />
       <div 
-        className="relative w-full max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto animate-enter"
+        className="relative w-full max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto animate-enter border-t border-x sm:border border-border"
         onClick={e => e.stopPropagation()}
       >
         {children}
@@ -1880,7 +1842,6 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
   const categories = type === 'income' ? incomeCategories : expenseCategories;
   
   useEffect(() => {
-    // Reset category when type changes
     setCategory(type === 'expense' ? 'food' : 'salary');
   }, [type]);
 
@@ -1914,13 +1875,13 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
         <h2 className="text-xl font-bold text-foreground">Nueva Transacción</h2>
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2 rounded-full bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex bg-secondary dark:bg-secondary/30 rounded-xl p-1 mb-6">
+      <div className="flex bg-secondary/50 rounded-xl p-1 mb-6">
         <button
           onClick={() => setType('expense')}
           className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
@@ -1932,7 +1893,7 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
         <button
           onClick={() => setType('income')}
           className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            type === 'income' ? 'bg-card text-green-500 shadow-sm' : 'text-muted-foreground'
+            type === 'income' ? 'bg-card text-green-600 dark:text-green-400 shadow-sm' : 'text-muted-foreground'
           }`}
         >
           Ingreso
@@ -1942,14 +1903,14 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
       <div className="text-center mb-6">
         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monto ({currency})</label>
         <div className="flex items-baseline justify-center mt-2">
-          <span className={`text-3xl font-bold mr-1 ${amount ? (type === 'income' ? 'text-green-500' : 'text-foreground') : 'text-muted-foreground/30'}`}>{formatCurrency(0).charAt(0)}</span>
+          <span className={`text-3xl font-bold mr-1 ${amount ? (type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-foreground') : 'text-muted-foreground/30'}`}>{formatCurrency(0).charAt(0)}</span>
           <input
             type="number"
             inputMode="decimal"
             placeholder="0"
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className={`text-5xl font-bold bg-transparent outline-none text-center max-w-[200px] placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${type === 'income' ? 'text-green-500' : 'text-foreground'}`}
+            className={`text-5xl font-bold bg-transparent outline-none text-center max-w-[200px] placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-foreground'}`}
             autoFocus
           />
         </div>
@@ -1961,21 +1922,21 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
           placeholder="Descripción (opcional)"
           value={description}
           onChange={e => setDescription(e.target.value)}
-          className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
         />
       </div>
 
       <div className="mb-6">
         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-2">Categoría</label>
         <div className="flex flex-wrap gap-2">
-          {categories.slice(0, 6).map(cat => (
+          {categories.slice(0, 6).map((cat) => (
             <button
               key={cat.id}
               onClick={() => setCategory(cat.id)}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 category === cat.id 
                   ? 'bg-primary text-primary-foreground' 
-                  : 'bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground'
+                  : 'bg-secondary/50 text-muted-foreground hover:text-foreground'
               }`}
             >
               {cat.name}
@@ -1996,7 +1957,7 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
         disabled={!amount || isSubmitting}
         className={`w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
           !amount 
-            ? 'bg-secondary dark:bg-secondary/30 text-muted-foreground cursor-not-allowed'
+            ? 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
             : type === 'income'
               ? 'bg-green-500 text-white hover:bg-green-600'
               : 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -2025,6 +1986,17 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const gradientColors = {
+    'from-slate-600 to-slate-800': 'linear-gradient(135deg, #475569, #1e293b)',
+    'from-blue-600 to-blue-800': 'linear-gradient(135deg, #2563eb, #1e40af)',
+    'from-purple-600 to-purple-800': 'linear-gradient(135deg, #9333ea, #6b21a8)',
+    'from-green-600 to-green-800': 'linear-gradient(135deg, #16a34a, #166534)',
+    'from-red-600 to-red-800': 'linear-gradient(135deg, #dc2626, #991b1b)',
+    'from-amber-500 to-orange-600': 'linear-gradient(135deg, #f59e0b, #ea580c)',
+    'from-pink-500 to-rose-600': 'linear-gradient(135deg, #ec4899, #e11d48)',
+    'from-cyan-500 to-teal-600': 'linear-gradient(135deg, #06b6d4, #0d9488)',
+  };
+
   const handleSubmit = async () => {
     if (!name.trim()) {
       setError('El nombre es requerido');
@@ -2050,7 +2022,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
         <h2 className="text-xl font-bold text-foreground">Nueva Tarjeta</h2>
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2 rounded-full bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -2062,7 +2034,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
           placeholder="Nombre (ej. Nu, BBVA)"
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
         />
 
         <div className="grid grid-cols-2 gap-3">
@@ -2072,7 +2044,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
             placeholder="Límite"
             value={limit}
             onChange={e => setLimit(e.target.value)}
-            className="h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
           <input
             type="number"
@@ -2080,7 +2052,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
             placeholder="Deuda actual"
             value={debt}
             onChange={e => setDebt(e.target.value)}
-            className="h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
 
@@ -2095,7 +2067,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
               max="31"
               value={cutoffDay}
               onChange={e => setCutoffDay(e.target.value)}
-              className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
           <div>
@@ -2108,7 +2080,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
               max="31"
               value={paymentDay}
               onChange={e => setPaymentDay(e.target.value)}
-              className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
         </div>
@@ -2116,14 +2088,14 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
         <div>
           <label className="text-xs font-medium text-muted-foreground block mb-2">Color</label>
           <div className="flex gap-2 flex-wrap">
-            {(gradients || []).map(g => (
+            {(gradients || []).map((g) => (
               <button
                 key={g.id}
                 onClick={() => setSelectedGradient(g.value)}
-                className={`w-10 h-10 rounded-xl bg-gradient-to-br transition-all ${
-                  selectedGradient === g.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' : ''
+                className={`w-10 h-10 rounded-xl transition-all ${
+                  selectedGradient === g.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-card scale-110' : ''
                 }`}
-                style={{ backgroundImage: `linear-gradient(to bottom right, ${g.value.replace('from-', '').replace(' to-', ',')})` }}
+                style={{ background: gradientColors[g.value] || gradientColors['from-slate-600 to-slate-800'] }}
               />
             ))}
           </div>
@@ -2190,7 +2162,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
         <h2 className="text-xl font-bold text-foreground">Nueva Suscripción</h2>
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2 rounded-full bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -2200,14 +2172,14 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
         <div>
           <label className="text-xs font-medium text-muted-foreground block mb-2">Categoría</label>
           <div className="flex flex-wrap gap-2">
-            {displayCategories.map(cat => (
+            {displayCategories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setCategory(cat.id)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   category === cat.id 
                     ? 'bg-primary text-primary-foreground' 
-                    : 'bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground'
+                    : 'bg-secondary/50 text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {cat.name}
@@ -2221,7 +2193,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
           placeholder="Nombre (ej. Netflix, Spotify)"
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
         />
 
         <div className="grid grid-cols-2 gap-3">
@@ -2231,7 +2203,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
             placeholder="Monto"
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className="h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
           <input
             type="number"
@@ -2241,7 +2213,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
             max="31"
             value={paymentDay}
             onChange={e => setPaymentDay(e.target.value)}
-            className="h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
 
@@ -2313,7 +2285,7 @@ const UpdateNotificationModal = ({ onClose }) => {
 // DROPDOWN MENU
 // ============================================
 
-const DropdownMenuContext = React.createContext();
+const DropdownMenuContext = React.createContext(null);
 
 function DropdownMenu({ open, onOpenChange, children }) {
   return (
@@ -2324,7 +2296,10 @@ function DropdownMenu({ open, onOpenChange, children }) {
 }
 
 function DropdownMenuTrigger({ children, asChild = false }) {
-  const { onOpenChange, open } = useContext(DropdownMenuContext);
+  const context = useContext(DropdownMenuContext);
+  if (!context) return null;
+  
+  const { onOpenChange, open } = context;
   if (asChild) {
     return React.cloneElement(React.Children.only(children), {
       onClick: () => onOpenChange(!open),
@@ -2334,36 +2309,25 @@ function DropdownMenuTrigger({ children, asChild = false }) {
 }
 
 function DropdownMenuContent({ children, align = 'start', side = 'bottom', className = '' }) {
-  const { open, onOpenChange } = useContext(DropdownMenuContext);
+  const context = useContext(DropdownMenuContext);
+  if (!context) return null;
   
-  const alignClass = { 'start': 'left-0', 'end': 'right-0' }[align];
-  const sideClass = { 'top': 'bottom-full mb-2', 'bottom': 'top-full mt-2' }[side];
+  const { open, onOpenChange } = context;
+  
+  const alignClass = { 'start': 'left-0', 'end': 'right-0' }[align] || 'left-0';
+  const sideClass = { 'top': 'bottom-full mb-2', 'bottom': 'top-full mt-2' }[side] || 'top-full mt-2';
 
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') onOpenChange(false);
     };
-    
-    // Close on click outside
-    const handleClickOutside = (event) => {
-      // This is a simplified check. A more robust solution might be needed
-      // if the trigger is complex or portals are involved.
-      if (event.target.closest('[data-radix-popper-content-wrapper]')) {
-        return;
-      }
-      onOpenChange(false);
-    };
-
 
     if (open) {
       document.addEventListener('keydown', handleEscape);
-      // Timeout to prevent closing immediately on trigger click
-      // setTimeout(() => document.addEventListener('click', handleClickOutside), 0);
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      // document.removeEventListener('click', handleClickOutside);
     };
   }, [open, onOpenChange]);
 
@@ -2371,8 +2335,7 @@ function DropdownMenuContent({ children, align = 'start', side = 'bottom', class
 
   return (
     <div
-      data-radix-popper-content-wrapper
-      className={`absolute z-50 min-w-[14rem] bg-card rounded-xl border border-border/50 shadow-2xl p-1 dropdown-content animate-scale-in ${sideClass} ${alignClass} ${className}`}
+      className={`absolute z-50 min-w-[14rem] bg-card rounded-xl border border-border shadow-2xl p-1 animate-scale-in ${sideClass} ${alignClass} ${className}`}
     >
       {React.Children.map(children, child => 
         React.isValidElement(child) 
@@ -2391,7 +2354,7 @@ function DropdownMenuItem({ children, onSelect, onOpenChange }) {
         if (onSelect) onSelect();
         if (onOpenChange) onOpenChange(false);
       }}
-      className="w-full text-left flex items-center px-2 py-1.5 rounded-md text-sm text-foreground hover:bg-secondary dark:hover:bg-secondary/30 transition-colors"
+      className="w-full text-left flex items-center px-3 py-2 rounded-lg text-sm text-foreground hover:bg-secondary/50 transition-colors"
     >
       {children}
     </button>
@@ -2399,7 +2362,7 @@ function DropdownMenuItem({ children, onSelect, onOpenChange }) {
 }
 
 function DropdownMenuSeparator() {
-  return <div className="h-px bg-border/50 my-1" />;
+  return <div className="h-px bg-border my-1" />;
 }
 
 
@@ -2408,14 +2371,14 @@ function DropdownMenuSeparator() {
 // ============================================
 
 const DashboardSkeleton = () => (
-  <div className="space-y-6 animate-pulse">
+  <div className="space-y-6 animate-pulse p-4">
     {/* Balance Card Skeleton */}
     <div className="rounded-3xl bg-card h-56 p-6">
-      <div className="h-4 bg-muted rounded w-1/4 mb-4"></div>
-      <div className="h-12 bg-muted rounded w-1/2 mb-6"></div>
+      <div className="h-4 bg-secondary rounded w-1/4 mb-4"></div>
+      <div className="h-12 bg-secondary rounded w-1/2 mb-6"></div>
       <div className="flex gap-4">
-        <div className="flex-1 bg-muted/50 rounded-xl h-20"></div>
-        <div className="flex-1 bg-muted/50 rounded-xl h-20"></div>
+        <div className="flex-1 bg-secondary/50 rounded-xl h-20"></div>
+        <div className="flex-1 bg-secondary/50 rounded-xl h-20"></div>
       </div>
     </div>
     
@@ -2428,15 +2391,15 @@ const DashboardSkeleton = () => (
 
     {/* List Skeleton */}
     <div className="space-y-2">
-      <div className="h-4 bg-muted rounded w-1/3 mb-4"></div>
+      <div className="h-4 bg-secondary rounded w-1/3 mb-4"></div>
       {[...Array(3)].map((_, i) => (
         <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-xl h-16">
-          <div className="w-10 h-10 rounded-xl bg-muted"></div>
+          <div className="w-10 h-10 rounded-xl bg-secondary"></div>
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-muted rounded w-3/4"></div>
-            <div className="h-3 bg-muted rounded w-1/2"></div>
+            <div className="h-4 bg-secondary rounded w-3/4"></div>
+            <div className="h-3 bg-secondary rounded w-1/2"></div>
           </div>
-          <div className="h-6 bg-muted rounded w-1/4"></div>
+          <div className="h-6 bg-secondary rounded w-1/4"></div>
         </div>
       ))}
     </div>
