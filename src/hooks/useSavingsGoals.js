@@ -1,4 +1,3 @@
-// src/hooks/useSavingsGoals.js
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -13,7 +12,7 @@ import {
   updateDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { useAuth } from '../firebase/auth';
+import { useAuth } from '../firebase/auth-provider';
 
 const COLLECTION_NAME = "savingsGoals";
 

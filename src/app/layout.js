@@ -4,6 +4,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '../components/theme-provider';
 import { FirebaseProvider } from '../firebase/provider';
+import { AuthProvider } from '../firebase/auth-provider';
+import { CurrencyProvider } from '../context/CurrencyContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -42,14 +44,18 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${inter.className} antialiased`}>
         <FirebaseProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+          <AuthProvider>
+            <CurrencyProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+              </ThemeProvider>
+            </CurrencyProvider>
+          </AuthProvider>
         </FirebaseProvider>
       </body>
     </html>

@@ -14,7 +14,7 @@ import {
   limit as firestoreLimit,
   serverTimestamp
 } from 'firebase/firestore';
-import { useAuth } from '../firebase/auth';
+import { useAuth } from '../firebase/auth-provider';
 
 // Constantes
 const MAX_CARDS = 10;

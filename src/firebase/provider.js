@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { initializeFirebase } from './index';
-import { AuthProvider } from './auth';
 
 // ============================================
 // TYPES & CONSTANTS
@@ -184,7 +183,7 @@ export function FirebaseProvider({
         message={error} 
         onRetry={retryCount < MAX_RETRIES ? retry : null}
         retryCount={retryCount}
-        maxRetries={MAX_RETRIES}
+        maxRetries={maxRetries}
       />
     );
   }
@@ -192,9 +191,7 @@ export function FirebaseProvider({
   // Firebase initialized successfully
   return (
     <FirebaseContext.Provider value={contextValue}>
-      <AuthProvider>
-        {children}
-      </AuthProvider>
+      {children}
     </FirebaseContext.Provider>
   );
 }

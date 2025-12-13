@@ -13,7 +13,7 @@ import {
   serverTimestamp,
   orderBy
 } from 'firebase/firestore';
-import { useAuth } from '../firebase/auth';
+import { useAuth } from '../firebase/auth-provider';
 
 // Constantes
 const COLLECTION_NAME = "subscriptions";

@@ -1,4 +1,3 @@
-// src/hooks/useBudgets.js
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -14,7 +13,7 @@ import {
   serverTimestamp,
   where
 } from 'firebase/firestore';
-import { useAuth } from '../firebase/auth';
+import { useAuth } from '../firebase/auth-provider';
 import { EXPENSE_CATEGORIES } from './useFinance';
 
 const COLLECTION_NAME = "budgets";

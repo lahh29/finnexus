@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '../firebase/auth';
+import { useState, useEffect, useCallback, useMemo, useContext, forwardRef } from 'react';
+import { useAuth } from '../firebase/auth-provider';
 import { useFinance, EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../hooks/useFinance';
 import { useCards, CARD_GRADIENTS } from '../hooks/useCards';
 import { useSubscriptions, SUBSCRIPTION_CATEGORIES } from '../hooks/useSubscriptions';
 import { useThemeMounted } from '../components/theme-provider';
+import { useCurrency } from '../context/CurrencyContext';
 import { 
   Plus, TrendingUp, TrendingDown, Trash2, X, CreditCard, 
   Wallet, Calendar, LayoutGrid, ChartPie, LogOut, 
   ArrowRight, User, Moon, Sun, ChevronRight, Bell,
   Sparkles, CircleDollarSign, Receipt, Eye, EyeOff,
-  Check, AlertCircle, Target, PiggyBank
+  Check, AlertCircle, Target, PiggyBank, Settings, CheckCircle
 } from 'lucide-react';
 
 // ============================================
@@ -83,14 +84,7 @@ export default function Home() {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
   
   if (!user) return <LoginPage />;
@@ -333,7 +327,8 @@ const InputField = ({ icon, ...props }) => (
 
 function Dashboard({ user }) {
   const { logout } = useAuth();
-  const { theme, setTheme, mounted } = useThemeMounted();
+  const { mounted } = useThemeMounted();
+  const { formatCurrency } = useCurrency();
   
   const { 
     transactions, 
@@ -373,20 +368,7 @@ function Dashboard({ user }) {
   const [currentView, setCurrentView] = useState('overview');
   const [showBalance, setShowBalance] = useState(true);
 
-  const formatCurrency = useCallback((amount) => {
-    return new Intl.NumberFormat('es-MX', { 
-      style: 'currency', 
-      currency: 'MXN',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount || 0);
-  }, []);
-  
-  const isLoading = loadingData || loadingCards || loadingSubs;
-
-  const toggleTheme = useCallback(() => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  }, [theme, setTheme]);
+  const isLoading = loadingData || loadingCards || loadingSubs || !mounted;
 
   // Datos para reportes
   const reportData = useMemo(() => ({
@@ -402,9 +384,9 @@ function Dashboard({ user }) {
   }), [transactions, balance, income, expense, cards, subs, subTotals, totalDebt, totalLimit]);
 
   return (
-    <div className="min-h-[100dvh] bg-background">
+    <div className="min-h-[100dvh] bg-secondary dark:bg-background">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-card/50 backdrop-blur-xl border-r border-border/50 p-4 z-40">
+      <aside className="hidden lg:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-card/50 dark:bg-card/30 backdrop-blur-xl border-r border-border/30 p-4 z-40">
         <div className="p-2 mb-6">
           <BrandLogo />
         </div>
@@ -437,31 +419,7 @@ function Dashboard({ user }) {
           />
         </nav>
 
-        <div className="border-t border-border/50 pt-4 space-y-2">
-          <button
-            onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all"
-          >
-            {mounted && (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
-            <span className="text-sm font-medium">{mounted && (theme === 'dark' ? 'Modo claro' : 'Modo oscuro')}</span>
-          </button>
-          
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-              {user.displayName?.[0] || user.email?.[0] || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{user.displayName || 'Usuario'}</p>
-              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-            </div>
-            <button 
-              onClick={logout}
-              className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <UserProfile user={user} logout={logout} />
       </aside>
 
       {/* Main Content */}
@@ -470,19 +428,8 @@ function Dashboard({ user }) {
         <header className="lg:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
           <div className="flex items-center justify-between px-4 h-14">
             <BrandLogo size="small" />
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-              >
-                {mounted && (theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />)}
-              </button>
-              <button
-                onClick={logout}
-                className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+            <div className="flex items-center gap-1">
+              <UserProfile user={user} logout={logout} isMobile />
             </div>
           </div>
         </header>
@@ -612,6 +559,126 @@ function Dashboard({ user }) {
 }
 
 // ============================================
+// USER PROFILE & SETTINGS
+// ============================================
+
+const UserProfile = ({ user, logout, isMobile = false }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  
+  if (isMobile) {
+    return (
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors dark:hover:bg-secondary/50">
+            <Settings className="w-5 h-5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <div className="p-2">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                {user.displayName?.[0] || user.email?.[0] || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{user.displayName || 'Usuario'}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
+            </div>
+          </div>
+          <DropdownMenuSeparator />
+          <ThemeSwitcher />
+          <CurrencySwitcher />
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={logout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            <span>Cerrar Sesión</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
+  return (
+    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+      <DropdownMenuTrigger asChild>
+        <div className="mt-auto border-t border-border/30 pt-4 cursor-pointer">
+          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-secondary dark:hover:bg-white/5 transition-colors">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+              {user.displayName?.[0] || user.email?.[0] || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{user.displayName || 'Usuario'}</p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+            <Settings className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="top" align="start" className="mb-2">
+        <ThemeSwitcher />
+        <CurrencySwitcher />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={logout}>
+          <LogOut className="w-4 h-4 mr-2" />
+          <span>Cerrar Sesión</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+
+const ThemeSwitcher = () => {
+  const { theme, setTheme } = useThemeMounted();
+
+  return (
+    <div className="p-1">
+      <div className="text-xs font-medium text-muted-foreground px-2 py-1">Tema</div>
+      <div className="flex bg-secondary dark:bg-secondary/30 rounded-lg p-1 mt-1">
+        <button
+          onClick={() => setTheme('light')}
+          className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+            theme === 'light' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
+          }`}
+        >
+          <Sun className="w-4 h-4" /> Claro
+        </button>
+        <button
+          onClick={() => setTheme('dark')}
+          className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+            theme === 'dark' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
+          }`}
+        >
+          <Moon className="w-4 h-4" /> Oscuro
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const CurrencySwitcher = () => {
+  const { currency, setCurrency, supportedCurrencies } = useCurrency();
+
+  return (
+    <div className="p-1">
+      <div className="text-xs font-medium text-muted-foreground px-2 py-1">Moneda</div>
+      <div className="space-y-1 mt-1">
+        {supportedCurrencies.map(c => (
+          <button
+            key={c.code}
+            onClick={() => setCurrency(c.code)}
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm font-medium transition-colors hover:bg-secondary dark:hover:bg-secondary/30"
+          >
+            <span>{c.code} - {c.name}</span>
+            {currency === c.code && <CheckCircle className="w-4 h-4 text-primary" />}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ============================================
 // NAVIGATION COMPONENTS
 // ============================================
 
@@ -621,7 +688,7 @@ const NavItem = ({ icon, label, active, onClick, badge }) => (
     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
       active 
         ? 'bg-primary text-primary-foreground' 
-        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+        : 'text-muted-foreground hover:text-foreground hover:bg-secondary dark:hover:bg-white/5'
     }`}
   >
     {icon}
@@ -665,41 +732,44 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
   return (
     <div className="space-y-6 animate-enter">
       {/* Balance Card */}
-      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-5 sm:p-6">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+      <section className="rounded-3xl bg-foreground text-background p-6 md:p-8 relative overflow-hidden shadow-2xl group ring-1 ring-black/10 dark:ring-white/5">
+        <div className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 rounded-full bg-primary/20 blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
         <div className="relative">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Balance Total</span>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-background/60">Balance Total</span>
             <button
               onClick={() => setShowBalance(!showBalance)}
-              className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:text-white transition-colors"
+              className="p-1.5 rounded-lg bg-background/10 text-background/70 hover:text-background transition-colors"
             >
               {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
           </div>
           
-          <div className="mb-6">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+          <div className="mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-background">
               {showBalance ? formatCurrency(balance) : '••••••'}
             </h2>
+            <p className="text-sm text-background/50 mt-1">
+              {showBalance ? `Descontando ${formatCurrency(subTotals.monthlyTotal)} de fijos` : '••••••'}
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/10 backdrop-blur rounded-xl p-3">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 bg-background/10 backdrop-blur rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-[10px] text-slate-300 uppercase font-medium">Ingresos</span>
+                <TrendingUp className="w-4 h-4 text-green-400" />
+                <span className="text-xs text-background/60 uppercase font-medium">Ingresos</span>
               </div>
-              <p className="text-lg font-semibold text-white">
+              <p className="text-xl font-semibold text-background">
                 {showBalance ? formatCurrency(income) : '••••'}
               </p>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-3">
+            <div className="flex-1 bg-background/10 backdrop-blur rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1">
-                <TrendingDown className="w-3.5 h-3.5 text-red-400" />
-                <span className="text-[10px] text-slate-300 uppercase font-medium">Gastos</span>
+                <TrendingDown className="w-4 h-4 text-red-400" />
+                <span className="text-xs text-background/60 uppercase font-medium">Gastos</span>
               </div>
-              <p className="text-lg font-semibold text-white">
+              <p className="text-xl font-semibold text-background">
                 {showBalance ? formatCurrency(expense) : '••••'}
               </p>
             </div>
@@ -750,12 +820,21 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
             action="Ver todas"
             onAction={() => actions.setCurrentView('cards')}
           />
-          <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide snap-x">
-            {cards.slice(0, 3).map(card => (
-              <div key={card.id} className="flex-shrink-0 w-64 snap-start">
-                <MiniCard card={card} formatCurrency={formatCurrency} />
+          <div className="relative -mx-4 px-4">
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+              {cards.map((card, index) => (
+                <div key={card.id} className="flex-shrink-0 w-72 snap-start">
+                  <MiniCard card={card} formatCurrency={formatCurrency} />
+                </div>
+              ))}
+              <div
+                onClick={() => actions.setCurrentView('cards')}
+                className="flex-shrink-0 w-72 snap-start flex flex-col items-center justify-center bg-card border-2 border-dashed border-border/50 rounded-2xl text-muted-foreground hover:text-primary hover:border-primary transition-all cursor-pointer"
+              >
+                <Plus className="w-6 h-6 mb-2" />
+                <span className="text-sm font-medium">Ver todas las tarjetas</span>
               </div>
-            ))}
+            </div>
           </div>
         </section>
       )}
@@ -812,7 +891,7 @@ const QuickAction = ({ icon, label, onClick, primary }) => (
     className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all active:scale-95 ${
       primary 
         ? 'bg-primary text-primary-foreground' 
-        : 'bg-card border border-border/50 text-foreground hover:bg-secondary/50'
+        : 'bg-card border border-border/50 text-foreground hover:bg-secondary dark:hover:bg-secondary/30'
     }`}
   >
     {icon}
@@ -839,28 +918,23 @@ const SectionHeader = ({ title, subtitle, action, onAction }) => (
 );
 
 const MiniCard = ({ card, formatCurrency }) => {
-  const gradientMap = {
-    'from-blue-500 to-blue-700': 'from-blue-500 to-blue-700',
-    'from-purple-500 to-indigo-600': 'from-purple-500 to-indigo-600',
-    'from-slate-700 to-black': 'from-slate-700 to-slate-900',
-    'from-rose-400 to-orange-400': 'from-rose-400 to-orange-500',
-    'from-emerald-500 to-teal-700': 'from-emerald-500 to-teal-600',
-  };
-
-  const gradient = gradientMap[card.bgGradient] || 'from-slate-600 to-slate-800';
+  const gradient = card.bgGradient || 'from-slate-600 to-slate-800';
   const utilizationPercent = card.limit > 0 ? Math.min((card.currentDebt / card.limit) * 100, 100) : 0;
 
   return (
-    <div className={`bg-gradient-to-br ${gradient} rounded-2xl p-4 text-white h-36 flex flex-col justify-between`}>
+    <div 
+      className="bg-gradient-to-br rounded-2xl p-5 text-white h-44 flex flex-col justify-between shadow-lg"
+      style={{ backgroundImage: `linear-gradient(to bottom right, ${gradient.replace('from-', '').replace(' to-', ',')})` }}
+    >
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-xs text-white/70 font-medium">{card.name}</p>
-          <p className="text-lg font-bold mt-0.5">{formatCurrency(card.currentDebt)}</p>
+          <p className="text-sm text-white/70 font-medium">{card.name}</p>
+          <p className="text-2xl font-bold mt-0.5">{formatCurrency(card.currentDebt)}</p>
         </div>
         <CreditCard className="w-5 h-5 text-white/50" />
       </div>
       <div>
-        <div className="flex justify-between text-[10px] text-white/70 mb-1">
+        <div className="flex justify-between text-xs text-white/70 mb-1">
           <span>Usado</span>
           <span>{Math.round(utilizationPercent)}%</span>
         </div>
@@ -931,7 +1005,7 @@ const SubscriptionItem = ({ subscription, formatCurrency, onDelete }) => {
 
 const EmptyState = ({ icon, message }) => (
   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-    <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+    <div className="w-12 h-12 rounded-full bg-secondary dark:bg-secondary/30 flex items-center justify-center mb-3">
       {icon}
     </div>
     <p className="text-sm">{message}</p>
@@ -983,23 +1057,15 @@ const CardsView = ({ cards, addCard, deleteCard, formatCurrency, canAddMore }) =
 );
 
 const CardItem = ({ card, formatCurrency, onDelete }) => {
-  const gradientMap = {
-    'from-blue-500 to-blue-700': 'from-blue-500 to-blue-700',
-    'from-purple-500 to-indigo-600': 'from-purple-500 to-indigo-600',
-    'from-slate-700 to-black': 'from-slate-700 to-slate-900',
-    'from-rose-400 to-orange-400': 'from-rose-400 to-orange-500',
-    'from-emerald-500 to-teal-700': 'from-emerald-500 to-teal-600',
-    'from-pink-500 to-rose-500': 'from-pink-500 to-rose-500',
-    'from-cyan-400 to-blue-500': 'from-cyan-400 to-blue-500',
-    'from-amber-400 to-orange-500': 'from-amber-400 to-orange-500',
-  };
-
-  const gradient = gradientMap[card.bgGradient] || 'from-slate-600 to-slate-800';
+  const gradient = card.bgGradient || 'from-slate-600 to-slate-800';
   const utilizationPercent = card.limit > 0 ? Math.min((card.currentDebt / card.limit) * 100, 100) : 0;
   const isHighUtilization = utilizationPercent > 80;
 
   return (
-    <div className={`bg-gradient-to-br ${gradient} rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white relative overflow-hidden group`}>
+    <div 
+      className="rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white relative overflow-hidden group shadow-lg"
+      style={{ backgroundImage: `linear-gradient(to bottom right, ${gradient.replace('from-', '').replace(' to-', ',')})` }}
+    >
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0iIzAwMDAwMCIgZmlsbC1vcGFjaXR5PSIwLjAzIj48L3JlY3Q+Cjwvc3ZnPg==')] opacity-50" />
       
       <div className="relative">
@@ -1131,7 +1197,7 @@ const SubscriptionDetailItem = ({ subscription, formatCurrency, onDelete, onMark
         : 'bg-card border-border/50 hover:border-border'
     }`}>
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-        isDueToday ? 'bg-amber-500/10 text-amber-500' : 'bg-secondary text-muted-foreground'
+        isDueToday ? 'bg-amber-500/10 text-amber-500' : 'bg-secondary dark:bg-secondary/30 text-muted-foreground'
       }`}>
         <Calendar className="w-5 h-5" />
       </div>
@@ -1393,7 +1459,7 @@ const StatsView = ({ data, formatCurrency }) => {
   if (transactions.length === 0 && cards.length === 0 && subs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center animate-enter">
-        <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center mb-4">
+        <div className="w-20 h-20 rounded-full bg-secondary dark:bg-secondary/30 flex items-center justify-center mb-4">
           <ChartPie className="w-10 h-10 text-muted-foreground" />
         </div>
         <h2 className="text-xl font-bold text-foreground mb-2">Sin datos suficientes</h2>
@@ -1425,7 +1491,7 @@ const StatsView = ({ data, formatCurrency }) => {
         </div>
         
         <div className="mb-4">
-          <div className="h-3 bg-secondary rounded-full overflow-hidden">
+          <div className="h-3 bg-secondary dark:bg-secondary/30 rounded-full overflow-hidden">
             <div 
               className={`h-full rounded-full transition-all duration-500 ${
                 financialHealth.score >= 85 ? 'bg-green-500' :
@@ -1612,7 +1678,7 @@ const StatsView = ({ data, formatCurrency }) => {
                         {formatCurrency(cat.amount)}
                       </span>
                     </div>
-                    <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-secondary dark:bg-secondary/30 rounded-full overflow-hidden">
                       <div 
                         className={`h-full rounded-full ${getCategoryColor(cat.category)}`}
                         style={{ width: `${cat.percentage}%` }}
@@ -1637,7 +1703,7 @@ const StatsView = ({ data, formatCurrency }) => {
           <div className="space-y-3">
             {topExpenses.map((t, i) => (
               <div key={t.id} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground">
+                <div className="w-6 h-6 rounded-full bg-secondary dark:bg-secondary/30 flex items-center justify-center text-xs font-bold text-muted-foreground">
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1662,11 +1728,11 @@ const StatsView = ({ data, formatCurrency }) => {
           </h3>
           
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-secondary/50 rounded-xl p-3">
+            <div className="bg-secondary/50 dark:bg-secondary/20 rounded-xl p-3">
               <p className="text-xs text-muted-foreground mb-1">Deuda Total</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(totalDebt)}</p>
             </div>
-            <div className="bg-secondary/50 rounded-xl p-3">
+            <div className="bg-secondary/50 dark:bg-secondary/20 rounded-xl p-3">
               <p className="text-xs text-muted-foreground mb-1">Crédito Disponible</p>
               <p className="text-lg font-bold text-green-500">{formatCurrency(totalLimit - totalDebt)}</p>
             </div>
@@ -1682,7 +1748,7 @@ const StatsView = ({ data, formatCurrency }) => {
                 {creditUtilization.toFixed(1)}%
               </span>
             </div>
-            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+            <div className="h-2 bg-secondary dark:bg-secondary/30 rounded-full overflow-hidden">
               <div 
                 className={`h-full rounded-full transition-all ${
                   creditUtilization <= 30 ? 'bg-green-500' : 
@@ -1704,11 +1770,11 @@ const StatsView = ({ data, formatCurrency }) => {
           </h3>
           
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-secondary/50 rounded-xl p-3">
+            <div className="bg-secondary/50 dark:bg-secondary/20 rounded-xl p-3">
               <p className="text-xs text-muted-foreground mb-1">Gasto Mensual</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(subTotals?.monthlyTotal || 0)}</p>
             </div>
-            <div className="bg-secondary/50 rounded-xl p-3">
+            <div className="bg-secondary/50 dark:bg-secondary/20 rounded-xl p-3">
               <p className="text-xs text-muted-foreground mb-1">Gasto Anual</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(subTotals?.annualTotal || 0)}</p>
             </div>
@@ -1773,7 +1839,7 @@ const Modal = ({ isOpen, onClose, children }) => {
         onClick={onClose}
       />
       <div 
-        className="relative w-full max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden animate-enter"
+        className="relative w-full max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto animate-enter"
         onClick={e => e.stopPropagation()}
       >
         {children}
@@ -1786,11 +1852,17 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('other');
+  const [category, setCategory] = useState('food');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const { currency, formatCurrency } = useCurrency();
 
   const categories = type === 'income' ? incomeCategories : expenseCategories;
+  
+  useEffect(() => {
+    // Reset category when type changes
+    setCategory(type === 'expense' ? 'food' : 'salary');
+  }, [type]);
 
   const handleSubmit = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -1822,15 +1894,15 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
         <h2 className="text-xl font-bold text-foreground">Nueva Transacción</h2>
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2 rounded-full bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex bg-secondary rounded-xl p-1 mb-6">
+      <div className="flex bg-secondary dark:bg-secondary/30 rounded-xl p-1 mb-6">
         <button
-          onClick={() => { setType('expense'); setCategory('other'); }}
+          onClick={() => setType('expense')}
           className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
             type === 'expense' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
           }`}
@@ -1838,7 +1910,7 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
           Gasto
         </button>
         <button
-          onClick={() => { setType('income'); setCategory('other'); }}
+          onClick={() => setType('income')}
           className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
             type === 'income' ? 'bg-card text-green-500 shadow-sm' : 'text-muted-foreground'
           }`}
@@ -1848,16 +1920,16 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
       </div>
 
       <div className="text-center mb-6">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monto</label>
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monto ({currency})</label>
         <div className="flex items-baseline justify-center mt-2">
-          <span className={`text-3xl font-bold mr-1 ${amount ? (type === 'income' ? 'text-green-500' : 'text-foreground') : 'text-muted-foreground/30'}`}>$</span>
+          <span className={`text-3xl font-bold mr-1 ${amount ? (type === 'income' ? 'text-green-500' : 'text-foreground') : 'text-muted-foreground/30'}`}>{formatCurrency(0).charAt(0)}</span>
           <input
             type="number"
             inputMode="decimal"
             placeholder="0"
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className="text-5xl font-bold bg-transparent outline-none text-center max-w-[200px] text-foreground placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className={`text-5xl font-bold bg-transparent outline-none text-center max-w-[200px] placeholder:text-muted-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${type === 'income' ? 'text-green-500' : 'text-foreground'}`}
             autoFocus
           />
         </div>
@@ -1869,7 +1941,7 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
           placeholder="Descripción (opcional)"
           value={description}
           onChange={e => setDescription(e.target.value)}
-          className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
@@ -1883,7 +1955,7 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 category === cat.id 
                   ? 'bg-primary text-primary-foreground' 
-                  : 'bg-secondary text-muted-foreground hover:text-foreground'
+                  : 'bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground'
               }`}
             >
               {cat.name}
@@ -1904,14 +1976,14 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
         disabled={!amount || isSubmitting}
         className={`w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
           !amount 
-            ? 'bg-secondary text-muted-foreground cursor-not-allowed'
+            ? 'bg-secondary dark:bg-secondary/30 text-muted-foreground cursor-not-allowed'
             : type === 'income'
               ? 'bg-green-500 text-white hover:bg-green-600'
               : 'bg-primary text-primary-foreground hover:bg-primary/90'
         }`}
       >
         {isSubmitting ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
         ) : (
           <>
             <Check className="w-5 h-5" />
@@ -1958,7 +2030,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
         <h2 className="text-xl font-bold text-foreground">Nueva Tarjeta</h2>
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2 rounded-full bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -1970,7 +2042,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
           placeholder="Nombre (ej. Nu, BBVA)"
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
         />
 
         <div className="grid grid-cols-2 gap-3">
@@ -1980,7 +2052,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
             placeholder="Límite"
             value={limit}
             onChange={e => setLimit(e.target.value)}
-            className="h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
           />
           <input
             type="number"
@@ -1988,7 +2060,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
             placeholder="Deuda actual"
             value={debt}
             onChange={e => setDebt(e.target.value)}
-            className="h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
@@ -2003,7 +2075,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
               max="31"
               value={cutoffDay}
               onChange={e => setCutoffDay(e.target.value)}
-              className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
           <div>
@@ -2016,7 +2088,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
               max="31"
               value={paymentDay}
               onChange={e => setPaymentDay(e.target.value)}
-              className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -2028,9 +2100,10 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
               <button
                 key={g.id}
                 onClick={() => setSelectedGradient(g.value)}
-                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${g.value} transition-all ${
+                className={`w-10 h-10 rounded-xl bg-gradient-to-br transition-all ${
                   selectedGradient === g.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110' : ''
                 }`}
+                style={{ backgroundImage: `linear-gradient(to bottom right, ${g.value.replace('from-', '').replace(' to-', ',')})` }}
               />
             ))}
           </div>
@@ -2097,7 +2170,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
         <h2 className="text-xl font-bold text-foreground">Nueva Suscripción</h2>
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2 rounded-full bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -2114,7 +2187,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   category === cat.id 
                     ? 'bg-primary text-primary-foreground' 
-                    : 'bg-secondary text-muted-foreground hover:text-foreground'
+                    : 'bg-secondary dark:bg-secondary/30 text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {cat.name}
@@ -2128,7 +2201,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
           placeholder="Nombre (ej. Netflix, Spotify)"
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+          className="w-full h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
         />
 
         <div className="grid grid-cols-2 gap-3">
@@ -2138,7 +2211,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
             placeholder="Monto"
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className="h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
           />
           <input
             type="number"
@@ -2148,7 +2221,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
             max="31"
             value={paymentDay}
             onChange={e => setPaymentDay(e.target.value)}
-            className="h-12 bg-secondary rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-12 bg-secondary dark:bg-secondary/30 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
@@ -2179,34 +2252,135 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
 };
 
 // ============================================
+// DROPDOWN MENU
+// ============================================
+
+const DropdownMenuContext = React.createContext();
+
+function DropdownMenu({ open, onOpenChange, children }) {
+  return (
+    <DropdownMenuContext.Provider value={{ open, onOpenChange }}>
+      <div className="relative">{children}</div>
+    </DropdownMenuContext.Provider>
+  );
+}
+
+function DropdownMenuTrigger({ children, asChild = false }) {
+  const { onOpenChange, open } = useContext(DropdownMenuContext);
+  if (asChild) {
+    return React.cloneElement(React.Children.only(children), {
+      onClick: () => onOpenChange(!open),
+    });
+  }
+  return <div onClick={() => onOpenChange(!open)}>{children}</div>;
+}
+
+function DropdownMenuContent({ children, align = 'start', side = 'bottom', className = '' }) {
+  const { open, onOpenChange } = useContext(DropdownMenuContext);
+  
+  const alignClass = { 'start': 'left-0', 'end': 'right-0' }[align];
+  const sideClass = { 'top': 'bottom-full mb-2', 'bottom': 'top-full mt-2' }[side];
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') onOpenChange(false);
+    };
+    
+    // Close on click outside
+    const handleClickOutside = (event) => {
+      // This is a simplified check. A more robust solution might be needed
+      // if the trigger is complex or portals are involved.
+      if (event.target.closest('[data-radix-popper-content-wrapper]')) {
+        return;
+      }
+      onOpenChange(false);
+    };
+
+
+    if (open) {
+      document.addEventListener('keydown', handleEscape);
+      // Timeout to prevent closing immediately on trigger click
+      // setTimeout(() => document.addEventListener('click', handleClickOutside), 0);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      // document.removeEventListener('click', handleClickOutside);
+    };
+  }, [open, onOpenChange]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      data-radix-popper-content-wrapper
+      className={`absolute z-50 min-w-[14rem] bg-card rounded-xl border border-border/50 shadow-2xl p-1 dropdown-content animate-scale-in ${sideClass} ${alignClass} ${className}`}
+    >
+      {React.Children.map(children, child => 
+        React.isValidElement(child) 
+          ? React.cloneElement(child, { onOpenChange })
+          : child
+      )}
+    </div>
+  );
+}
+
+
+function DropdownMenuItem({ children, onSelect, onOpenChange }) {
+  return (
+    <button
+      onClick={() => {
+        if (onSelect) onSelect();
+        if (onOpenChange) onOpenChange(false);
+      }}
+      className="w-full text-left flex items-center px-2 py-1.5 rounded-md text-sm text-foreground hover:bg-secondary dark:hover:bg-secondary/30 transition-colors"
+    >
+      {children}
+    </button>
+  );
+}
+
+function DropdownMenuSeparator() {
+  return <div className="h-px bg-border/50 my-1" />;
+}
+
+
+// ============================================
 // SKELETON
 // ============================================
 
 const DashboardSkeleton = () => (
   <div className="space-y-6 animate-pulse">
-    <div className="rounded-2xl sm:rounded-3xl bg-secondary p-5 sm:p-6 h-48" />
-    
-    <div className="grid grid-cols-3 gap-3">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="h-20 bg-secondary rounded-2xl" />
-      ))}
-    </div>
-    
-    <div>
-      <div className="h-6 bg-secondary rounded w-1/3 mb-3" />
+    {/* Balance Card Skeleton */}
+    <div className="rounded-3xl bg-card h-56 p-6">
+      <div className="h-4 bg-muted rounded w-1/4 mb-4"></div>
+      <div className="h-12 bg-muted rounded w-1/2 mb-6"></div>
       <div className="flex gap-4">
-        <div className="w-64 h-36 bg-secondary rounded-2xl flex-shrink-0" />
-        <div className="w-64 h-36 bg-secondary rounded-2xl flex-shrink-0" />
+        <div className="flex-1 bg-muted/50 rounded-xl h-20"></div>
+        <div className="flex-1 bg-muted/50 rounded-xl h-20"></div>
       </div>
     </div>
     
-    <div>
-      <div className="h-6 bg-secondary rounded w-1/2 mb-3" />
-      <div className="space-y-2">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-16 bg-secondary rounded-xl" />
-        ))}
-      </div>
+    {/* Actions Skeleton */}
+    <div className="grid grid-cols-3 gap-3">
+      <div className="bg-card h-24 rounded-2xl"></div>
+      <div className="bg-card h-24 rounded-2xl"></div>
+      <div className="bg-card h-24 rounded-2xl"></div>
+    </div>
+
+    {/* List Skeleton */}
+    <div className="space-y-2">
+      <div className="h-4 bg-muted rounded w-1/3 mb-4"></div>
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-xl h-16">
+          <div className="w-10 h-10 rounded-xl bg-muted"></div>
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-muted rounded w-3/4"></div>
+            <div className="h-3 bg-muted rounded w-1/2"></div>
+          </div>
+          <div className="h-6 bg-muted rounded w-1/4"></div>
+        </div>
+      ))}
     </div>
   </div>
 );
