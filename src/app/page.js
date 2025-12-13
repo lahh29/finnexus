@@ -5,6 +5,7 @@ import { useAuth } from '../firebase/auth-provider';
 import { useFinance, EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../hooks/useFinance';
 import { useCards, CARD_GRADIENTS } from '../hooks/useCards';
 import { useSubscriptions, SUBSCRIPTION_CATEGORIES } from '../hooks/useSubscriptions';
+import { useBudgets } from '../hooks/useBudgets';
 import { useThemeMounted } from '../components/theme-provider';
 import { useCurrency } from '../context/CurrencyContext';
 import { 
@@ -12,7 +13,8 @@ import {
   Wallet, Calendar, LayoutGrid, ChartPie, LogOut, 
   ArrowRight, User, Moon, Sun, ChevronRight, Bell,
   Sparkles, CircleDollarSign, Receipt, Eye, EyeOff,
-  Check, AlertCircle, Target, PiggyBank, Settings, CheckCircle, PartyPopper
+  Check, AlertCircle, Target, PiggyBank, Settings, CheckCircle, PartyPopper,
+  Edit2
 } from 'lucide-react';
 
 // ============================================
@@ -64,9 +66,11 @@ const CategoryIcon = ({ category, type = 'expense', size = 'default' }) => {
     emerald: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
     yellow: 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400',
   };
+  
+  const selectedColor = cat?.color && colorMap[cat.color] ? colorMap[cat.color] : colorMap['slate'];
 
   return (
-    <div className={`${sizes[size]} ${colorMap[cat?.color || 'slate']} flex items-center justify-center flex-shrink-0`}>
+    <div className={`${sizes[size]} ${selectedColor} flex items-center justify-center flex-shrink-0`}>
       {type === 'income' ? (
         <TrendingUp className="w-1/2 h-1/2" />
       ) : (
@@ -367,6 +371,15 @@ function Dashboard({ user }) {
     loadingSubs,
     categories: subCategories,
   } = useSubscriptions();
+
+  const {
+    budgets,
+    addBudget,
+    deleteBudget,
+    loadingBudgets,
+    stats: budgetStats,
+    categories: budgetCategories,
+  } = useBudgets();
   
   const [activeModal, setActiveModal] = useState(null);
   const [currentView, setCurrentView] = useState('overview');
@@ -387,7 +400,7 @@ function Dashboard({ user }) {
     setShowUpdateModal(false);
   };
 
-  const isLoading = loadingData || loadingCards || loadingSubs || !mounted;
+  const isLoading = loadingData || loadingCards || loadingSubs || loadingBudgets || !mounted;
 
   const reportData = useMemo(() => ({
     transactions,
@@ -421,6 +434,13 @@ function Dashboard({ user }) {
             label="Tarjetas" 
             active={currentView === 'cards'} 
             onClick={() => setCurrentView('cards')} 
+          />
+          <NavItem 
+            icon={<Target className="w-5 h-5" />} 
+            label="Presupuestos" 
+            active={currentView === 'budgets'} 
+            onClick={() => setCurrentView('budgets')}
+            badge={budgetStats.overBudgetCount}
           />
           <NavItem 
             icon={<Calendar className="w-5 h-5" />} 
@@ -460,7 +480,7 @@ function Dashboard({ user }) {
             <>
               {currentView === 'overview' && (
                 <OverviewView 
-                  data={{ balance, income, expense, transactions, cards, subs, subTotals, subAlerts }}
+                  data={{ balance, income, expense, transactions, cards, subs, subTotals, subAlerts, budgets, budgetStats }}
                   actions={{ 
                     setActiveModal, 
                     deleteTransaction, 
@@ -480,6 +500,16 @@ function Dashboard({ user }) {
                   deleteCard={deleteCard}
                   formatCurrency={formatCurrency}
                   canAddMore={canAddMoreCards}
+                />
+              )}
+              {currentView === 'budgets' && (
+                <BudgetsView
+                  budgets={budgets}
+                  addBudget={() => setActiveModal('budget')}
+                  deleteBudget={deleteBudget}
+                  stats={budgetStats}
+                  formatCurrency={formatCurrency}
+                  categories={budgetCategories}
                 />
               )}
               {currentView === 'subscriptions' && (
@@ -532,17 +562,18 @@ function Dashboard({ user }) {
           </div>
           
           <MobileNavItem 
+            icon={<Target />} 
+            label="Presup."
+            active={currentView === 'budgets'} 
+            onClick={() => setCurrentView('budgets')}
+            badge={budgetStats.overBudgetCount}
+          />
+          <MobileNavItem 
             icon={<Calendar />} 
             label="Pagos" 
             active={currentView === 'subscriptions'} 
             onClick={() => setCurrentView('subscriptions')}
             badge={subAlerts.dueSoon.length + subAlerts.dueToday.length}
-          />
-          <MobileNavItem 
-            icon={<ChartPie />} 
-            label="Stats" 
-            active={currentView === 'stats'} 
-            onClick={() => setCurrentView('stats')} 
           />
         </div>
       </nav>
@@ -562,6 +593,14 @@ function Dashboard({ user }) {
           onClose={() => setActiveModal(null)} 
           onSubmit={addCard}
           gradients={availableGradients}
+        />
+      </Modal>
+
+      <Modal isOpen={activeModal === 'budget'} onClose={() => setActiveModal(null)}>
+        <BudgetForm 
+          onClose={() => setActiveModal(null)} 
+          onSubmit={addBudget}
+          categories={budgetCategories}
         />
       </Modal>
 
@@ -717,7 +756,7 @@ const NavItem = ({ icon, label, active, onClick, badge }) => (
     <span className="flex-1 text-left">{label}</span>
     {badge && badge > 0 && (
       <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold flex items-center justify-center ${
-        active ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'
+        active ? 'bg-white/20 text-white' : 'bg-destructive text-destructive-foreground'
       }`}>
         {badge}
       </span>
@@ -749,7 +788,7 @@ const MobileNavItem = ({ icon, label, active, onClick, badge }) => (
 // ============================================
 
 const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalance }) => {
-  const { balance, income, expense, transactions, cards, subs, subTotals, subAlerts } = data;
+  const { balance, income, expense, transactions, cards, subs, subTotals, subAlerts, budgets, budgetStats } = data;
 
   return (
     <div className="space-y-6 animate-enter">
@@ -800,12 +839,17 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
       </section>
 
       {/* Quick Actions */}
-      <section className="grid grid-cols-3 gap-3">
+      <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <QuickAction 
           icon={<Plus className="w-5 h-5" />}
           label="Transacción"
           onClick={() => actions.setActiveModal('transaction')}
           primary
+        />
+        <QuickAction 
+          icon={<Target className="w-5 h-5" />}
+          label="Presupuesto"
+          onClick={() => actions.setActiveModal('budget')}
         />
         <QuickAction 
           icon={<CreditCard className="w-5 h-5" />}
@@ -820,16 +864,39 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
       </section>
 
       {/* Alerts */}
-      {(subAlerts.dueToday.length > 0 || subAlerts.dueSoon.length > 0) && (
+      {(subAlerts.dueToday.length > 0 || subAlerts.dueSoon.length > 0 || budgetStats.overBudgetCount > 0) && (
         <section className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4">
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
             <Bell className="w-4 h-4" />
             <span className="text-sm font-medium">
-              {subAlerts.dueToday.length > 0 
-                ? `${subAlerts.dueToday.length} pago(s) vence(n) hoy`
-                : `${subAlerts.dueSoon.length} pago(s) próximo(s)`
+              {budgetStats.overBudgetCount > 0 
+                ? `${budgetStats.overBudgetCount} presupuesto(s) excedido(s)`
+                : subAlerts.dueToday.length > 0 
+                  ? `${subAlerts.dueToday.length} pago(s) vence(n) hoy`
+                  : `${subAlerts.dueSoon.length} pago(s) próximo(s)`
               }
             </span>
+          </div>
+        </section>
+      )}
+
+      {/* Budgets Preview */}
+      {budgets.length > 0 && (
+        <section>
+          <SectionHeader 
+            title="Mis Presupuestos" 
+            action="Ver todos"
+            onAction={() => actions.setCurrentView('budgets')}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {budgets.slice(0, 2).map((budget) => (
+              <BudgetCard 
+                key={budget.id}
+                budget={budget}
+                formatCurrency={formatCurrency}
+                simple
+              />
+            ))}
           </div>
         </section>
       )}
@@ -910,14 +977,14 @@ const OverviewView = ({ data, actions, formatCurrency, showBalance, setShowBalan
 const QuickAction = ({ icon, label, onClick, primary }) => (
   <button
     onClick={onClick}
-    className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all active:scale-95 ${
+    className={`flex flex-col items-center justify-center text-center gap-2 p-3 sm:p-4 rounded-2xl transition-all active:scale-95 ${
       primary 
         ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
         : 'bg-card border border-border text-foreground hover:bg-secondary/50'
     }`}
   >
     {icon}
-    <span className="text-xs font-medium">{label}</span>
+    <span className="text-xs font-medium leading-tight">{label}</span>
   </button>
 );
 
@@ -1038,12 +1105,13 @@ const SubscriptionItem = ({ subscription, formatCurrency, onDelete }) => {
   );
 };
 
-const EmptyState = ({ icon, message }) => (
-  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+const EmptyState = ({ icon, message, action }) => (
+  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-center">
     <div className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center mb-3">
       {icon}
     </div>
-    <p className="text-sm">{message}</p>
+    <p className="text-sm mb-4">{message}</p>
+    {action}
   </div>
 );
 
@@ -1148,6 +1216,123 @@ const CardsView = ({ cards, addCard, deleteCard, formatCurrency, canAddMore }) =
     </div>
   );
 };
+
+// ============================================
+// BUDGETS VIEW
+// ============================================
+
+const BudgetsView = ({ budgets, addBudget, deleteBudget, stats, formatCurrency, categories }) => (
+  <div className="space-y-6 animate-enter">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Presupuestos</h1>
+        <p className="text-sm text-muted-foreground">{formatCurrency(stats.totalSpent)} gastado de {formatCurrency(stats.totalBudget)}</p>
+      </div>
+      <button
+        onClick={addBudget}
+        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+      >
+        <Plus className="w-4 h-4" />
+        Crear
+      </button>
+    </div>
+
+    {/* Summary Cards */}
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <SummaryCard label="Total presupuestado" value={formatCurrency(stats.totalBudget)} />
+      <SummaryCard label="Total gastado" value={formatCurrency(stats.totalSpent)} />
+      <SummaryCard label="Restante" value={formatCurrency(stats.remaining)} highlight={stats.remaining < 0} />
+      <SummaryCard label="Progreso" value={`${stats.percentUsed.toFixed(1)}%`} highlight={stats.percentUsed > 80} />
+    </div>
+    
+    {stats.overBudgetCount > 0 && (
+      <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4">
+        <div className="flex items-center gap-2 text-destructive mb-2">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-sm font-medium">{stats.overBudgetCount} presupuesto(s) excedido(s)</span>
+        </div>
+      </div>
+    )}
+
+    {/* Budgets List */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {budgets.map((budget) => (
+        <BudgetCard 
+          key={budget.id}
+          budget={budget}
+          formatCurrency={formatCurrency}
+          onDelete={() => deleteBudget(budget.id)}
+        />
+      ))}
+    </div>
+    
+    {budgets.length === 0 && (
+      <EmptyState 
+        icon={<Target className="w-8 h-8" />}
+        message="Aún no has creado ningún presupuesto."
+        action={
+          <button
+            onClick={addBudget}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Crear mi primer presupuesto
+          </button>
+        }
+      />
+    )}
+  </div>
+);
+
+const BudgetCard = ({ budget, formatCurrency, onDelete, simple = false }) => {
+  const category = EXPENSE_CATEGORIES.find(c => c.id === budget.category) || EXPENSE_CATEGORIES.find(c => c.id === 'other');
+  const progress = budget.amount > 0 ? (budget.spent / budget.amount) * 100 : 0;
+  const remaining = budget.amount - budget.spent;
+
+  let progressColor = 'bg-primary';
+  if (progress > 100) progressColor = 'bg-destructive';
+  else if (progress > 80) progressColor = 'bg-amber-500';
+
+  return (
+    <div className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-3 group">
+      <div className="flex items-center gap-3">
+        <CategoryIcon category={budget.category} size="default" />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-foreground truncate">{budget.name}</p>
+          <p className="text-xs text-muted-foreground capitalize">{category.name}</p>
+        </div>
+        {!simple && (
+          <button 
+            onClick={onDelete}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+      
+      <div>
+        <div className="flex justify-between items-baseline mb-1">
+          <span className="text-lg font-bold text-foreground">{formatCurrency(budget.spent)}</span>
+          <span className="text-sm text-muted-foreground">/ {formatCurrency(budget.amount)}</span>
+        </div>
+        <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
+          <div 
+            className={`h-full rounded-full transition-all duration-500 ${progressColor}`}
+            style={{ width: `${Math.min(progress, 100)}%` }}
+          />
+        </div>
+        <p className={`text-xs mt-1.5 ${remaining < 0 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+          {remaining >= 0 
+            ? `${formatCurrency(remaining)} restante` 
+            : `${formatCurrency(Math.abs(remaining))} de más`
+          }
+        </p>
+      </div>
+    </div>
+  );
+};
+
 
 // ============================================
 // SUBSCRIPTIONS VIEW
@@ -1444,23 +1629,19 @@ const StatsView = ({ data, formatCurrency }) => {
   }, [income, expense]);
 
   const getCategoryName = (category) => {
-    const names = {
-      food: 'Comida', transport: 'Transporte', entertainment: 'Entretenimiento',
-      shopping: 'Compras', health: 'Salud', education: 'Educación',
-      bills: 'Servicios', home: 'Hogar', salary: 'Salario',
-      freelance: 'Freelance', investment: 'Inversiones', other: 'Otros',
-    };
-    return names[category] || category;
+    const cat = EXPENSE_CATEGORIES.find(c => c.id === category);
+    return cat ? cat.name : category;
   };
 
   const getCategoryColor = (category) => {
+    const cat = EXPENSE_CATEGORIES.find(c => c.id === category);
     const colors = {
       food: 'bg-orange-500', transport: 'bg-blue-500', entertainment: 'bg-purple-500',
       shopping: 'bg-pink-500', health: 'bg-red-500', education: 'bg-indigo-500',
       bills: 'bg-yellow-500', home: 'bg-amber-500', salary: 'bg-green-500',
       freelance: 'bg-cyan-500', investment: 'bg-emerald-500', other: 'bg-gray-500',
     };
-    return colors[category] || 'bg-gray-500';
+    return cat && colors[cat.id] ? colors[cat.id] : 'bg-gray-500';
   };
 
   const getHealthColor = (score) => {
@@ -1850,6 +2031,10 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
       setError('Ingresa un monto válido');
       return;
     }
+    if (!description.trim()) {
+      setError('La descripción es requerida');
+      return;
+    }
 
     setIsSubmitting(true);
     setError('');
@@ -1857,7 +2042,7 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
     try {
       await onSubmit(
         amount,
-        description || (type === 'expense' ? 'Gasto' : 'Ingreso'),
+        description,
         type,
         category
       );
@@ -1919,7 +2104,7 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Descripción (opcional)"
+          placeholder="Descripción (ej. Café con amigos)"
           value={description}
           onChange={e => setDescription(e.target.value)}
           className="w-full h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
@@ -1954,9 +2139,9 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
 
       <button
         onClick={handleSubmit}
-        disabled={!amount || isSubmitting}
+        disabled={!amount || !description || isSubmitting}
         className={`w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
-          !amount 
+          !amount || !description
             ? 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
             : type === 'income'
               ? 'bg-green-500 text-white hover:bg-green-600'
@@ -2000,6 +2185,18 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
   const handleSubmit = async () => {
     if (!name.trim()) {
       setError('El nombre es requerido');
+      return;
+    }
+    if (!limit) {
+      setError('El límite es requerido');
+      return;
+    }
+    if (!cutoffDay) {
+      setError('El día de corte es requerido');
+      return;
+    }
+    if (!paymentDay) {
+      setError('El día de pago es requerido');
       return;
     }
 
@@ -2110,7 +2307,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
 
         <button
           onClick={handleSubmit}
-          disabled={!name.trim() || isSubmitting}
+          disabled={!name.trim() || !limit || !cutoffDay || !paymentDay || isSubmitting}
           className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isSubmitting ? (
@@ -2127,6 +2324,112 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
   );
 };
 
+const BudgetForm = ({ onClose, onSubmit, categories }) => {
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('food');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      setError('El nombre del presupuesto es requerido');
+      return;
+    }
+    if (!amount || parseFloat(amount) <= 0) {
+      setError('Ingresa un monto válido');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      await onSubmit(name, amount, category);
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const displayCategories = (categories || []).filter(c => c.id !== 'other');
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-foreground">Nuevo Presupuesto</h2>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-full bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Nombre (ej. Supermercado mensual)"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          className="w-full h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+        />
+        <input
+          type="number"
+          inputMode="decimal"
+          placeholder="Monto total"
+          value={amount}
+          onChange={e => setAmount(e.target.value)}
+          className="w-full h-12 bg-secondary/50 rounded-xl px-4 text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+        />
+
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-2">Categoría</label>
+          <div className="flex flex-wrap gap-2">
+            {displayCategories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCategory(cat.id)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  category === cat.id 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-secondary/50 text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <button
+          onClick={handleSubmit}
+          disabled={!name.trim() || !amount || isSubmitting}
+          className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          {isSubmitting ? (
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <Check className="w-5 h-5" />
+              Crear Presupuesto
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
 const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -2140,6 +2443,15 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
       setError('El nombre es requerido');
       return;
     }
+    if (!amount || parseFloat(amount) <= 0) {
+      setError('El monto es requerido');
+      return;
+    }
+    if (!paymentDay) {
+      setError('El día de pago es requerido');
+      return;
+    }
+
 
     setIsSubmitting(true);
     setError('');
@@ -2226,7 +2538,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
 
         <button
           onClick={handleSubmit}
-          disabled={!name.trim() || isSubmitting}
+          disabled={!name.trim() || !amount || !paymentDay || isSubmitting}
           className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isSubmitting ? (
@@ -2371,7 +2683,7 @@ function DropdownMenuSeparator() {
 // ============================================
 
 const DashboardSkeleton = () => (
-  <div className="space-y-6 animate-pulse p-4">
+  <div className="space-y-6 animate-pulse p-4 sm:p-6 lg:p-8">
     {/* Balance Card Skeleton */}
     <div className="rounded-3xl bg-card h-56 p-6">
       <div className="h-4 bg-secondary rounded w-1/4 mb-4"></div>
@@ -2383,17 +2695,18 @@ const DashboardSkeleton = () => (
     </div>
     
     {/* Actions Skeleton */}
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="bg-card h-24 rounded-2xl"></div>
       <div className="bg-card h-24 rounded-2xl"></div>
       <div className="bg-card h-24 rounded-2xl"></div>
       <div className="bg-card h-24 rounded-2xl"></div>
     </div>
 
     {/* List Skeleton */}
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="h-4 bg-secondary rounded w-1/3 mb-4"></div>
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-xl h-16">
+        <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-xl h-20">
           <div className="w-10 h-10 rounded-xl bg-secondary"></div>
           <div className="flex-1 space-y-2">
             <div className="h-4 bg-secondary rounded w-3/4"></div>

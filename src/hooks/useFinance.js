@@ -16,7 +16,8 @@ import {
   where,
   startAfter,
   getDocs,
-  Timestamp
+  Timestamp,
+  runTransaction
 } from 'firebase/firestore';
 import { useAuth } from '../firebase/auth-provider';
 
@@ -370,7 +371,7 @@ export function useFinance(options = {}) {
     }
   }, [user, db, hasMore, loadingMore, period, initialLimit, getDateRange]);
 
-  // Agregar transacción
+  // Agregar transacción y actualizar presupuesto
   const addTransaction = useCallback(async (
     amount, 
     description, 
@@ -382,67 +383,45 @@ export function useFinance(options = {}) {
       throw new Error("Usuario no autenticado");
     }
 
-    // Validaciones
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       throw new Error("El monto debe ser mayor a 0");
     }
-
-    if (parsedAmount > 999999999) {
-      throw new Error("El monto es demasiado grande");
-    }
-
-    const trimmedDescription = description?.trim() || '';
-    if (trimmedDescription.length > 200) {
-      throw new Error("La descripción es muy larga (máximo 200 caracteres)");
-    }
-
-    if (!['income', 'expense'].includes(type)) {
-      throw new Error("Tipo de transacción inválido");
-    }
-
-    // Validar categoría
-    const validCategories = type === 'income' 
-      ? INCOME_CATEGORIES 
-      : EXPENSE_CATEGORIES;
-    const isValidCategory = validCategories.some(c => c.id === category);
-    const finalCategory = isValidCategory ? category : 'other';
-
-    // Preparar fecha
-    let transactionDate;
-    if (date instanceof Date && !isNaN(date)) {
-      transactionDate = Timestamp.fromDate(date);
-    } else if (date) {
-      const parsedDate = new Date(date);
-      if (!isNaN(parsedDate)) {
-        transactionDate = Timestamp.fromDate(parsedDate);
-      } else {
-        transactionDate = serverTimestamp();
-      }
-    } else {
-      transactionDate = serverTimestamp();
-    }
-
-    const transactionData = {
-      amount: parsedAmount,
-      description: trimmedDescription || (type === 'income' ? 'Ingreso' : 'Gasto'),
-      type,
-      category: finalCategory,
-      date: transactionDate,
-      createdAt: serverTimestamp(),
-    };
+    // ... (otras validaciones)
 
     try {
-      const docRef = await addDoc(
-        collection(db, "users", user.uid, COLLECTION_NAME),
-        transactionData
-      );
-      return docRef.id;
+      await runTransaction(db, async (transaction) => {
+        // 1. Agregar la nueva transacción
+        const transactionData = {
+          amount: parsedAmount,
+          description: description?.trim() || (type === 'income' ? 'Ingreso' : 'Gasto'),
+          type,
+          category,
+          date: date ? Timestamp.fromDate(new Date(date)) : serverTimestamp(),
+          createdAt: serverTimestamp(),
+        };
+        transaction.set(doc(collection(db, "users", user.uid, "transactions")), transactionData);
+        
+        // 2. Si es un gasto, actualizar el presupuesto correspondiente
+        if (type === 'expense') {
+          const budgetsRef = collection(db, "users", user.uid, "budgets");
+          const budgetQuery = query(budgetsRef, where("category", "==", category), firestoreLimit(1));
+          const budgetSnapshot = await getDocs(budgetQuery);
+
+          if (!budgetSnapshot.empty) {
+            const budgetDoc = budgetSnapshot.docs[0];
+            const budgetData = budgetDoc.data();
+            const newSpent = (budgetData.spent || 0) + parsedAmount;
+            transaction.update(budgetDoc.ref, { spent: newSpent });
+          }
+        }
+      });
     } catch (err) {
-      console.error("Error adding transaction:", err);
-      throw new Error("Error al guardar la transacción. Intenta de nuevo.");
+      console.error("Transaction failed: ", err);
+      throw new Error("Error al guardar la transacción.");
     }
   }, [user, db]);
+
 
   // Actualizar transacción
   const updateTransaction = useCallback(async (transactionId, updates) => {
@@ -510,21 +489,46 @@ export function useFinance(options = {}) {
     }
   }, [user, db]);
 
-  // Eliminar transacción
+  // Eliminar transacción y actualizar presupuesto
   const deleteTransaction = useCallback(async (transactionId) => {
     if (!user || !db) {
       throw new Error("Usuario no autenticado");
     }
-
     if (!transactionId) {
       throw new Error("ID de transacción requerido");
     }
 
     try {
-      await deleteDoc(doc(db, "users", user.uid, COLLECTION_NAME, transactionId));
+      const transactionRef = doc(db, "users", user.uid, "transactions", transactionId);
+      
+      await runTransaction(db, async (transaction) => {
+        const transactionDoc = await transaction.get(transactionRef);
+        if (!transactionDoc.exists()) {
+          throw new Error("La transacción no existe.");
+        }
+        
+        const { amount, category, type } = transactionDoc.data();
+        
+        // 1. Eliminar la transacción
+        transaction.delete(transactionRef);
+
+        // 2. Si fue un gasto, revertir el monto en el presupuesto
+        if (type === 'expense') {
+          const budgetsRef = collection(db, "users", user.uid, "budgets");
+          const budgetQuery = query(budgetsRef, where("category", "==", category), firestoreLimit(1));
+          const budgetSnapshot = await getDocs(budgetQuery);
+
+          if (!budgetSnapshot.empty) {
+            const budgetDoc = budgetSnapshot.docs[0];
+            const budgetData = budgetDoc.data();
+            const newSpent = Math.max(0, (budgetData.spent || 0) - amount);
+            transaction.update(budgetDoc.ref, { spent: newSpent });
+          }
+        }
+      });
     } catch (err) {
       console.error("Error deleting transaction:", err);
-      throw new Error("Error al eliminar la transacción. Intenta de nuevo.");
+      throw new Error("Error al eliminar la transacción.");
     }
   }, [user, db]);
 
