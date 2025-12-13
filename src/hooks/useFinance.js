@@ -35,7 +35,7 @@ export const EXPENSE_CATEGORIES = [
   { id: 'health', name: 'Salud', icon: 'heart', color: 'red' },
   { id: 'education', name: 'Educación', icon: 'book', color: 'indigo' },
   { id: 'bills', name: 'Servicios', icon: 'file-text', color: 'gray' },
-  { id: 'home', name: 'Hogar', icon: 'home', color: 'amber' },
+  { id: 'home', name: 'Hogar', icon: 'amber', color: 'amber' },
   { id: 'personal', name: 'Personal', icon: 'user', color: 'cyan' },
   { id: 'other', name: 'Otros', icon: 'more-horizontal', color: 'slate' },
 ];

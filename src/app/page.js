@@ -2027,6 +2027,8 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
   }, [type]);
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!amount || parseFloat(amount) <= 0) {
       setError('Ingresa un monto válido');
       return;
@@ -2139,13 +2141,11 @@ const TransactionForm = ({ onClose, onSubmit, expenseCategories, incomeCategorie
 
       <button
         onClick={handleSubmit}
-        disabled={!amount || !description || isSubmitting}
-        className={`w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
-          !amount || !description
-            ? 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
-            : type === 'income'
-              ? 'bg-green-500 text-white hover:bg-green-600'
-              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+        disabled={isSubmitting || !amount || !description}
+        className={`w-full h-12 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+          type === 'income'
+            ? 'bg-green-500 text-white hover:bg-green-600'
+            : 'bg-primary text-primary-foreground hover:bg-primary/90'
         }`}
       >
         {isSubmitting ? (
@@ -2183,6 +2183,8 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!name.trim()) {
       setError('El nombre es requerido');
       return;
@@ -2307,7 +2309,7 @@ const CardForm = ({ onClose, onSubmit, gradients }) => {
 
         <button
           onClick={handleSubmit}
-          disabled={!name.trim() || !limit || !cutoffDay || !paymentDay || isSubmitting}
+          disabled={isSubmitting || !name.trim() || !limit || !cutoffDay || !paymentDay}
           className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isSubmitting ? (
@@ -2332,6 +2334,8 @@ const BudgetForm = ({ onClose, onSubmit, categories }) => {
   const [error, setError] = useState('');
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!name.trim()) {
       setError('El nombre del presupuesto es requerido');
       return;
@@ -2412,7 +2416,7 @@ const BudgetForm = ({ onClose, onSubmit, categories }) => {
 
         <button
           onClick={handleSubmit}
-          disabled={!name.trim() || !amount || isSubmitting}
+          disabled={isSubmitting || !name.trim() || !amount}
           className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isSubmitting ? (
@@ -2439,6 +2443,8 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
   const [error, setError] = useState('');
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!name.trim()) {
       setError('El nombre es requerido');
       return;
@@ -2538,7 +2544,7 @@ const SubscriptionForm = ({ onClose, onSubmit, categories }) => {
 
         <button
           onClick={handleSubmit}
-          disabled={!name.trim() || !amount || !paymentDay || isSubmitting}
+          disabled={isSubmitting || !name.trim() || !amount || !paymentDay}
           className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isSubmitting ? (
